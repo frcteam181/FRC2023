@@ -32,5 +32,4 @@ public final class Constants {
     public static final int k_RIGHT_FOLLOWER = 5;
     public static final int k_PIGEON = 7;
 
-  
 }

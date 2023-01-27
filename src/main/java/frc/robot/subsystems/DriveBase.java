@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 //import com.ctre.phoenix.sensors.WPI_Pigeon2;
+
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
@@ -36,6 +37,7 @@ public class DriveBase extends SubsystemBase {
     //m_pigeon = new WPI_Pigeon2(k_PIGEON);
 
     m_leftLeader = new CANSparkMax(k_LEFT_LEADER, MotorType.kBrushless);
+
     m_leftFollower = new CANSparkMax(k_LEFT_FOLLOWER, MotorType.kBrushless);
     m_rightLeader = new CANSparkMax(k_RIGHT_LEADER, MotorType.kBrushless);
     m_rightFollower = new CANSparkMax(k_RIGHT_FOLLOWER, MotorType.kBrushless);
@@ -110,6 +112,5 @@ public class DriveBase extends SubsystemBase {
   public double getRightPosition() {
     return m_rightEncoder.getPosition();
   }
-
 
 }
