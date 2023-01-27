@@ -2,8 +2,6 @@ package frc.robot;
 
 public final class Constants {
 
-<<<<<<< Updated upstream
-=======
     /* Drive Base Gains */
 
     public static final int k_DRIVE_SLOT_ID = 0;
@@ -33,7 +31,6 @@ public final class Constants {
     public static final int k_RIGHT_LEADER = 6;
     public static final int k_RIGHT_FOLLOWER = 5;
     public static final int k_PIGEON = 7;
->>>>>>> Stashed changes
 
   
 }
