@@ -13,6 +13,10 @@ public final class Constants {
 
     public static final int k_DRIVER_CONTROLLER = 0;
 
+    /* Controller Deadbands */
+
+    public static final double k_DriverDeadband = 0.2;
+
     // Do not change anything after this line unless you rewire the robot and
     // update the spreadsheet!
     // Port assignments should match up with the spreadsheet here:
@@ -20,12 +24,12 @@ public final class Constants {
 
     /* CAN IDs */
 
-    public static final int k_PDH = 0;
-    public static final int k_PH = 0;
-    public static final int k_LEFT_LEDER = 0;
-    public static final int k_LEFT_FOLLOWER = 0;
-    public static final int k_RIGHT_LEADER = 0;
-    public static final int k_RIGHT_FOLLOWER = 0;
-    public static final int k_PIGEON = 0;
+    public static final int k_PDH = 1;
+    public static final int k_PH = 2;
+    public static final int k_LEFT_LEADER = 4;
+    public static final int k_LEFT_FOLLOWER = 3;
+    public static final int k_RIGHT_LEADER = 6;
+    public static final int k_RIGHT_FOLLOWER = 5;
+    public static final int k_PIGEON = 7;
 
 }

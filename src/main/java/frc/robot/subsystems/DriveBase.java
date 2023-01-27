@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.sensors.WPI_Pigeon2;
+//import com.ctre.phoenix.sensors.WPI_Pigeon2;
+
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
@@ -19,7 +20,7 @@ public class DriveBase extends SubsystemBase {
   private PowerDistribution m_pdh;
   private PneumaticHub m_ph;
 
-  private WPI_Pigeon2 m_pigeon;
+  //private WPI_Pigeon2 m_pigeon;
   
   private CANSparkMax m_leftLeader, m_leftFollower, m_rightLeader, m_rightFollower;
   private SparkMaxPIDController m_leftPID, m_rightPID;
@@ -33,9 +34,10 @@ public class DriveBase extends SubsystemBase {
 
     m_ph = new PneumaticHub(k_PH);
 
-    m_pigeon = new WPI_Pigeon2(k_PIGEON);
+    //m_pigeon = new WPI_Pigeon2(k_PIGEON);
 
-    m_leftLeader = new CANSparkMax(k_LEFT_LEDER, MotorType.kBrushless);
+    m_leftLeader = new CANSparkMax(k_LEFT_LEADER, MotorType.kBrushless);
+
     m_leftFollower = new CANSparkMax(k_LEFT_FOLLOWER, MotorType.kBrushless);
     m_rightLeader = new CANSparkMax(k_RIGHT_LEADER, MotorType.kBrushless);
     m_rightFollower = new CANSparkMax(k_RIGHT_FOLLOWER, MotorType.kBrushless);
@@ -84,6 +86,31 @@ public class DriveBase extends SubsystemBase {
 
     m_diffDrive = new DifferentialDrive(m_leftLeader, m_rightLeader);
 
+  }
+
+  public double deadband(double value) {
+
+    if (Math.abs(value) >= k_DriverDeadband) {
+      return value;
+    } else {
+      return 0;
+    }
+
+  }
+
+  public void teleopDrive(double speedValue, double rotationValue) {
+
+    m_diffDrive.arcadeDrive(-deadband(speedValue), deadband(rotationValue));
+
+  }
+
+  public double getLeftPosition() {
+    return m_leftEncoder.getPosition();
+  }
+
+
+  public double getRightPosition() {
+    return m_rightEncoder.getPosition();
   }
 
 }
