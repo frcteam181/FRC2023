@@ -37,7 +37,6 @@ public class DriveBase extends SubsystemBase {
     //m_pigeon = new WPI_Pigeon2(k_PIGEON);
 
     m_leftLeader = new CANSparkMax(k_LEFT_LEADER, MotorType.kBrushless);
-
     m_leftFollower = new CANSparkMax(k_LEFT_FOLLOWER, MotorType.kBrushless);
     m_rightLeader = new CANSparkMax(k_RIGHT_LEADER, MotorType.kBrushless);
     m_rightFollower = new CANSparkMax(k_RIGHT_FOLLOWER, MotorType.kBrushless);
@@ -84,6 +83,9 @@ public class DriveBase extends SubsystemBase {
     m_leftFollower.follow(m_leftLeader);
     m_rightFollower.follow(m_rightLeader);
 
+    m_leftLeader.setInverted(false);
+    m_rightLeader.setInverted(true);
+
     m_diffDrive = new DifferentialDrive(m_leftLeader, m_rightLeader);
 
   }
@@ -100,7 +102,7 @@ public class DriveBase extends SubsystemBase {
 
   public void teleopDrive(double speedValue, double rotationValue) {
 
-    m_diffDrive.arcadeDrive(-deadband(speedValue), deadband(rotationValue));
+    m_diffDrive.arcadeDrive(deadband(speedValue), deadband(rotationValue));
 
   }
 
