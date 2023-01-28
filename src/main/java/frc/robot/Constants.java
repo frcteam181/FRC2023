@@ -24,6 +24,11 @@ public final class Constants {
     public static final double k_DriverDeadband = 0.2;
     public static final double k_OperatorDeadband = 0.2;
 
+    /* Camera Pipelines */
+
+    public static final int k_REFLECTIVE_PIPELINE = 0;
+    public static final int k_APRIL_TAG_PIPELINE = 1;
+
     // Do not change anything after this line unless you rewire the robot and
     // update the spreadsheet!
     // Port assignments should match up with the spreadsheet here:
