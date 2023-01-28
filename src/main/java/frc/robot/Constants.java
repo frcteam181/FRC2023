@@ -9,13 +9,20 @@ public final class Constants {
     public static final Gains k_DriveGains = new Gains(0, 0, 0, 0, 0, 0, 0);
     public static final Gains k_TurnGains = new Gains(0, 0, 0, 0, 0, 0, 0);
 
+    /* Arm Gains */
+
+    public static final int k_PIVOT_SLOT_ID = 0;
+    public static final Gains k_PivotGains = new Gains(0, 0, 0, 0, 0, 0, 0);
+
     /* Controller Ports */
 
     public static final int k_DRIVER_CONTROLLER = 0;
+    public static final int k_OERATOR_CONTROLLER = 1;
 
     /* Controller Deadbands */
 
     public static final double k_DriverDeadband = 0.2;
+    public static final double k_OperatorDeadband = 0.2;
 
     // Do not change anything after this line unless you rewire the robot and
     // update the spreadsheet!
@@ -31,5 +38,7 @@ public final class Constants {
     public static final int k_RIGHT_LEADER = 6;
     public static final int k_RIGHT_FOLLOWER = 5;
     public static final int k_PIGEON = 7;
+    public static final int k_LEFT_PIVOT = 8;
+    public static final int k_RIGHT_PIVOT = 9; 
 
 }
