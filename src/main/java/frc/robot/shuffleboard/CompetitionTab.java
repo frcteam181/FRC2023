@@ -19,22 +19,34 @@ public class CompetitionTab {
 
         ShuffleboardTab m_competitionTab = Shuffleboard.getTab("Competition");
 
-        //Auto Chooser
+        //Initialize used objects
         m_autoChooser = new SendableChooser<Command>();
 
         //Used Subsystems
         m_driveBase = driveBase;
         m_arm = arm;
 
+        configureAuto();
+
+        /* (Column , Row) starting from index #0  15x7 */
+        m_competitionTab.add("Field", m_driveBase.getField()).withPosition(8, 0).withSize(7, 4);
+
+    }
+
+    public void configureAuto(/* May need to pass objects here. Meybe it'll be better to not do this method at all `\'-'/` */) {
+
         //Set Default Auto
         //m_autoChooser.setDefaultOption("Taxi Only", new TaxiOnly(m_driveTrain));
-        
+
         // Add auto options here:
         //m_autoChooser.addOption("Taxi Only", new TaxiOnly(m_driveTrain));
-        //
+
+        //m_competitionTab.add("Choose Auto", m_autoChooser).withWidget(BuiltInWidgets.kComboBoxChooser).withPosition(4, 3).withSize(2, 1);
+
     }
 
     public Command getAuto() {
         return m_autoChooser.getSelected();
     }
+
 }
