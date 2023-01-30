@@ -46,4 +46,10 @@ public final class Constants {
     public static final int k_LEFT_PIVOT = 8;
     public static final int k_RIGHT_PIVOT = 9; 
 
+    /* Pneumatics Ports */
+
+    public static final int k_MAIN_PRESSURE = 0;
+    public static final int k_WORKING_PRESSURE = 1;
+    public static final int k_INTAKE_PISTON = 0;
+
 }
