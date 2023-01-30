@@ -1,16 +1,21 @@
 package frc.robot.subsystems;
 
-//import com.ctre.phoenix.sensors.WPI_Pigeon2;
+import com.ctre.phoenix.sensors.WPI_Pigeon2;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj.PneumaticHub;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import static frc.robot.Constants.*;
@@ -20,13 +25,18 @@ public class DriveBase extends SubsystemBase {
   private PowerDistribution m_pdh;
   private PneumaticHub m_ph;
 
-  //private WPI_Pigeon2 m_pigeon;
+  private WPI_Pigeon2 m_pigeon;
   
   private CANSparkMax m_leftLeader, m_leftFollower, m_rightLeader, m_rightFollower;
   private SparkMaxPIDController m_leftPID, m_rightPID;
   private RelativeEncoder m_leftEncoder, m_rightEncoder;
 
   private DifferentialDrive m_diffDrive;
+  private Field2d m_field;
+  private DifferentialDriveOdometry m_odometry;
+
+  private float m_i = 0;
+  private boolean bol = true;
 
   public DriveBase() {
 
@@ -34,7 +44,9 @@ public class DriveBase extends SubsystemBase {
 
     m_ph = new PneumaticHub(k_PH);
 
-    //m_pigeon = new WPI_Pigeon2(k_PIGEON);
+    m_ph.enableCompressorAnalog(55, 60);
+
+    m_pigeon = new WPI_Pigeon2(k_PIGEON);
 
     m_leftLeader = new CANSparkMax(k_LEFT_LEADER, MotorType.kBrushless);
     m_leftFollower = new CANSparkMax(k_LEFT_FOLLOWER, MotorType.kBrushless);
@@ -88,6 +100,40 @@ public class DriveBase extends SubsystemBase {
 
     m_diffDrive = new DifferentialDrive(m_leftLeader, m_rightLeader);
 
+    m_field = new Field2d();
+
+    m_odometry = new DifferentialDriveOdometry(getRotation2d(), getLeftPosition(), getRightPosition());
+
+  }
+
+  @Override
+  public void periodic() {
+      updateOdometry();
+      m_field.setRobotPose(getPoseMeters());
+  }
+
+  public Field2d getField() {
+    return m_field;
+  }
+
+  public void updateOdometry() {
+    m_odometry.update(getRotation2d(), getLeftPosition(), getRightPosition());
+  }
+
+  public Rotation2d getRotation2d() {
+    return m_pigeon.getRotation2d();
+  }
+
+  public Pose2d getPoseMeters() {
+    return m_odometry.getPoseMeters();
+  }
+
+  public double getMainPressure() {
+    return m_ph.getPressure(k_MAIN_PRESSURE);
+  }
+
+  public double getWorkingPressure() {
+    return m_ph.getPressure(k_WORKING_PRESSURE);
   }
 
   public double deadband(double value) {
