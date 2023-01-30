@@ -35,7 +35,7 @@ public class Arm extends SubsystemBase {
         m_leftPivotPID.setFF(k_PivotGains.kFF, k_PIVOT_SLOT_ID);
         m_leftPivotPID.setOutputRange(k_PivotGains.kMinOutput, k_PivotGains.kMaxOutput, k_PIVOT_SLOT_ID);
 
-        m_rightPivot.follow(m_leftPivot);
+        m_rightPivot.follow(m_leftPivot, true);
 
     }
 
@@ -48,11 +48,11 @@ public class Arm extends SubsystemBase {
     }
 
     public void moveUp() {
-        m_leftPivot.set(0.5);
+        m_leftPivot.set(0.1);
     }
     
     public void moveDown() {
-        m_leftPivot.set(-0.5);
+        m_leftPivot.set(-0.1);
     }
 
     public void stop() {
