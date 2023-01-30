@@ -1,0 +1,17 @@
+{
+  "HALProvider": {
+    "Other Devices": {
+      "Pigeon 2[7]": {
+        "header": {
+          "open": true
+        }
+      }
+    }
+  },
+  "NTProvider": {
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/Shuffleboard/Competition/Field": "Field2d"
+    }
+  }
+}
