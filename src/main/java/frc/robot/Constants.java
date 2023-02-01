@@ -12,7 +12,11 @@ public final class Constants {
     /* Arm Gains */
 
     public static final int k_PIVOT_SLOT_ID = 0;
+    public static final int k_SPOOL_SLOT_ID = 0;
+    public static final double k_ArmKG_m_Gain = 0.1;
+    public static final double k_ArmKG_b_Gain = 0;
     public static final Gains k_PivotGains = new Gains(0, 0, 0, 0, 0, 0, 0);
+    public static final Gains k_SpoolGains = new Gains(0, 0, 0, 0, 0, 0, 0);
 
     /* Controller Ports */
 
@@ -38,18 +42,24 @@ public final class Constants {
 
     public static final int k_PDH = 1;
     public static final int k_PH = 2;
-    public static final int k_LEFT_LEADER = 4;
     public static final int k_LEFT_FOLLOWER = 3;
-    public static final int k_RIGHT_LEADER = 6;
+    public static final int k_LEFT_LEADER = 4;
     public static final int k_RIGHT_FOLLOWER = 5;
+    public static final int k_RIGHT_LEADER = 6;
     public static final int k_PIGEON = 7;
     public static final int k_LEFT_PIVOT = 8;
-    public static final int k_RIGHT_PIVOT = 9; 
+    public static final int k_RIGHT_PIVOT = 9;
+    public static final int k_SPOOL = 10;
 
     /* Pneumatics Ports */
 
-    public static final int k_MAIN_PRESSURE = 0;
-    public static final int k_WORKING_PRESSURE = 1;
+    public static final int k_STORED_PSI = 0;
+    public static final int k_WORKING_PSI = 1;
     public static final int k_INTAKE_PISTON = 0;
+
+    // PDH Ports
+
+    public static final int k_PDH_CHANNEL7 = 7;
+    public static final int k_PDH_CHANNEL12 = 12;
 
 }
