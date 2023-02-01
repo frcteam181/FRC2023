@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import static frc.robot.Constants.*;
@@ -35,8 +34,7 @@ public class DriveBase extends SubsystemBase {
   private Field2d m_field;
   private DifferentialDriveOdometry m_odometry;
 
-  private float m_i = 0;
-  private boolean bol = true;
+  // Simulation
 
   public DriveBase() {
 
@@ -104,6 +102,8 @@ public class DriveBase extends SubsystemBase {
 
     m_odometry = new DifferentialDriveOdometry(getRotation2d(), getLeftPosition(), getRightPosition());
 
+    // Simulation
+
   }
 
   @Override
@@ -124,16 +124,24 @@ public class DriveBase extends SubsystemBase {
     return m_pigeon.getRotation2d();
   }
 
+  public double getYaw() {
+    return m_pigeon.getYaw();
+  }
+
   public Pose2d getPoseMeters() {
     return m_odometry.getPoseMeters();
   }
 
-  public double getMainPressure() {
-    return m_ph.getPressure(k_MAIN_PRESSURE);
+  public double getStoredPSI() {
+    return m_ph.getPressure(k_STORED_PSI);
   }
 
-  public double getWorkingPressure() {
-    return m_ph.getPressure(k_WORKING_PRESSURE);
+  public double getWorkingPSI() {
+    return m_ph.getPressure(k_WORKING_PSI);
+  }
+
+  public boolean getCompressorStatus() {
+    return m_ph.getCompressor();
   }
 
   public double deadband(double value) {
@@ -147,9 +155,15 @@ public class DriveBase extends SubsystemBase {
   }
 
   public void teleopDrive(double speedValue, double rotationValue) {
-
     m_diffDrive.arcadeDrive(deadband(speedValue), deadband(rotationValue));
+  }
 
+  public RelativeEncoder getLeftEncoder() {
+    return m_leftEncoder;
+  }
+
+  public RelativeEncoder getRightEncoder() {
+    return m_rightEncoder;
   }
 
   public double getLeftPosition() {
@@ -159,6 +173,18 @@ public class DriveBase extends SubsystemBase {
 
   public double getRightPosition() {
     return m_rightEncoder.getPosition();
+  }
+
+  public PowerDistribution getPDH() {
+    return m_pdh;
+  }
+
+  public double getChannel7() {
+    return m_pdh.getCurrent(k_PDH_CHANNEL7);
+  }
+
+  public double getChannel12() {
+    return m_pdh.getCurrent(k_PDH_CHANNEL7);
   }
 
 }
