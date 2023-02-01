@@ -3,8 +3,8 @@ package frc.robot.controllers;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
-import frc.robot.commands.arm.moveArmDown;
-import frc.robot.commands.arm.moveArmUp;
+import frc.robot.commands.arm_commands.moveArmDown;
+import frc.robot.commands.arm_commands.moveArmUp;
 import frc.robot.commands.default_commands.ArmDefaultCommand;
 import frc.robot.subsystems.Arm;
 
