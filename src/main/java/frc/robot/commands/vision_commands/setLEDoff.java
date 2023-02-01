@@ -1,13 +1,13 @@
-package frc.robot.commands.vision;
+package frc.robot.commands.vision_commands;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.Vision;
 
-public class toggleLED extends CommandBase {
+public class setLEDoff extends CommandBase {
 
     private final Vision m_vision;
 
-    public toggleLED(Vision vision) {
+    public setLEDoff(Vision vision) {
         
         m_vision = vision;
 
@@ -17,7 +17,7 @@ public class toggleLED extends CommandBase {
 
     @Override
     public void execute() {
-        m_vision.toggleLED();;
+        m_vision.setLEDoff();
     }
     
 }
