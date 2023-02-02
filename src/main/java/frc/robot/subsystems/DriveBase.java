@@ -187,4 +187,15 @@ public class DriveBase extends SubsystemBase {
     return m_pdh.getCurrent(k_PDH_CHANNEL7);
   }
 
+  //Beginning of code Aiden 2/2/2023
+
+  /*
+  public void stabilize() {
+  
+  if(getYaw() >= 5 || getYaw() <= -5) {
+    m_diffDrive.tankDrive(getYaw(), getYaw());
+  }
+
+  }
+*/
 }
