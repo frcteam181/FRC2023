@@ -3,11 +3,11 @@ package frc.robot.commands.arm_commands;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.Arm;
 
-public class moveArmDown extends CommandBase{
+public class pivotDown extends CommandBase{
 
     private final Arm m_arm;;
 
-    public moveArmDown(Arm arm) {
+    public pivotDown(Arm arm) {
         
         m_arm = arm;
 
@@ -16,12 +16,12 @@ public class moveArmDown extends CommandBase{
 
     @Override
     public void execute() {
-        m_arm.moveDown();
+        m_arm.pivotDown();
     }
 
     @Override
     public void end(boolean interrupted) {
-        m_arm.stop();
+        m_arm.stopPivot();
     }
     
 }
