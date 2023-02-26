@@ -14,15 +14,15 @@ public class DriveBaseDefaultCommand extends CommandBase{
         m_driveBase = driveBase;
         m_driverController = driverController;
 
-        addRequirements(driveBase);
+        addRequirements(m_driveBase);
     }
 
     @Override
     public void execute() {
 
         double m_forwardValue, m_turnValue;
-        m_forwardValue = -m_driverController.getY();
-        m_turnValue = m_driverController.getZ();
+        m_forwardValue = (-1) * m_driverController.getY();
+        m_turnValue = (-1) * m_driverController.getZ();
         m_driveBase.teleopDrive(m_forwardValue, m_turnValue);
 
     }
