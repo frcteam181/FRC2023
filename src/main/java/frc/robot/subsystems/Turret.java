@@ -25,11 +25,11 @@ public class Turret extends TrapezoidProfileSubsystem {
     private RelativeEncoder m_encoder;
     private SparkMaxPIDController m_turretPID;
     private SimpleMotorFeedforward m_turretFF;
-    private double m_ffValue, m_setpointPos, m_setpointVel, m_turretKp, m_turretKi, m_turretKd, m_turretKs;
+    private double m_ffValue, m_setpointPos, m_setpointVel, m_turretKp, m_turretKi, m_turretKd, m_turretKs, m_turretTuningSetpoint, m_turretSetpointBuffer;
     private double[] m_response;
     private boolean m_isTuning;
     private ShuffleboardTab m_tab;
-    private GenericEntry m_turretKpEntry, m_turretKiEntry, m_turretKdEntry, m_turretKsEntry, m_turretAngleEntry, m_turretSetpointEntry, m_turretOutputVoltageEntry;
+    private GenericEntry m_turretKpEntry, m_turretKiEntry, m_turretKdEntry, m_turretKsEntry, m_turretAngleEntry, m_turretSetpointEntry, m_turretOutputVoltageEntry, m_turretTuningSetpointEntry;
 
     public Turret() {
 
@@ -39,7 +39,7 @@ public class Turret extends TrapezoidProfileSubsystem {
 
         m_turretMotor.restoreFactoryDefaults();
 
-        m_turretMotor.setInverted(true);
+        m_turretMotor.setInverted(false);
 
         m_encoder = m_turretMotor.getEncoder();
         m_encoder.setPositionConversionFactor(k_turretPosFac);
@@ -88,7 +88,11 @@ public class Turret extends TrapezoidProfileSubsystem {
         return m_encoder.getPosition();
     }
 
-    public double getSetpointAngle() {
+    public double getAngleDeg() {
+        return Units.radiansToDegrees(getAngle());
+    }
+
+    public double getSetpointAngleDeg() {
         return Units.radiansToDegrees(m_setpointPos);
     }
 
@@ -113,8 +117,8 @@ public class Turret extends TrapezoidProfileSubsystem {
     }
 
     public double[] getResponse() {
-        m_response[0] = getSetpointAngle();
-        m_response[1] = Units.radiansToDegrees(getAngle());
+        m_response[0] = getSetpointAngleDeg();
+        m_response[1] = getAngleDeg();
         return m_response;
     }
 
@@ -148,18 +152,34 @@ public class Turret extends TrapezoidProfileSubsystem {
 
         m_turretAngleEntry = m_tab.add("Turret Angle", getAngle()).withPosition(1, 0).getEntry();
         m_tab.addDoubleArray("Response", this::getResponse).withPosition(1, 1).withSize(3, 3).withWidget(BuiltInWidgets.kGraph);
-        m_turretSetpointEntry = m_tab.add("Turret Setpoint", getSetpointAngle()).withPosition(2, 0).getEntry();
+        m_turretTuningSetpointEntry = m_tab.add("Turret Tuning Setpoint (deg)", m_turretTuningSetpoint).withPosition(1, 4).getEntry();
+        m_turretSetpointEntry = m_tab.add("Turret Setpoint", getSetpointAngleDeg()).withPosition(2, 0).getEntry();
         m_turretOutputVoltageEntry = m_tab.add("Turret Output Voltage", getOutputVoltage()).withPosition(3, 0).getEntry();
 
     }
 
     public void tuningPeriodic() {
 
-        // Pivot
+        // Turret
         var turretKp = m_turretKpEntry.getDouble(k_TurretGains.kP);
         var turretKi = m_turretKiEntry.getDouble(k_TurretGains.kI);
         var turretKd = m_turretKdEntry.getDouble(k_TurretGains.kD);
         var turretKs = m_turretKsEntry.getDouble(k_turretKs);
+
+        m_turretSetpointBuffer = m_turretTuningSetpointEntry.getDouble(0);
+
+        if(Math.abs(m_turretSetpointBuffer) >= 180) {
+            if(m_turretSetpointBuffer > 0) {
+                var turretTuningSetpoint = 180;
+                if(turretTuningSetpoint != m_turretTuningSetpoint) {m_turretTuningSetpoint = turretTuningSetpoint;}
+            } else {
+                var turretTuningSetpoint = -180;
+                if(turretTuningSetpoint != m_turretTuningSetpoint) {m_turretTuningSetpoint = turretTuningSetpoint;}
+            }
+        } else {
+            var turretTuningSetpoint = m_turretSetpointBuffer;
+            if(turretTuningSetpoint != m_turretTuningSetpoint) {m_turretTuningSetpoint = turretTuningSetpoint;}
+        }
 
         if(turretKp != m_turretKp) {m_turretPID.setP(turretKp, k_TURRET_SLOT_ID);m_turretKp = turretKp;}
         if(turretKi != m_turretKi) {m_turretPID.setI(turretKi, k_TURRET_SLOT_ID);m_turretKi = turretKi;}
@@ -167,9 +187,13 @@ public class Turret extends TrapezoidProfileSubsystem {
         if(turretKs != m_turretKs) {m_turretFF = new SimpleMotorFeedforward(turretKs, k_turretKv, k_turretKa);m_turretKs = turretKs;}
 
         m_turretAngleEntry.setDouble(getAngle());
-        m_turretSetpointEntry.setDouble(getSetpointAngle());
+        m_turretSetpointEntry.setDouble(getSetpointAngleDeg());
         m_turretOutputVoltageEntry.setDouble(getOutputVoltage());
 
+    }
+
+    public void moveTurretToTuning() {
+        this.setTurretGoal(Units.degreesToRadians(m_turretTuningSetpoint));
     }
     
 }

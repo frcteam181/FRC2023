@@ -8,13 +8,13 @@ import frc.robot.subsystems.Turret;
 public class setTurretGoal extends CommandBase {
 
     public Turret m_turret;
-    public double m_turretGoal;
+    public double m_turretGoalRad;
     public TrapezoidProfile.State m_goal;
 
-    public setTurretGoal(Turret turret, double turretGoal) {
+    public setTurretGoal(Turret turret, double turretGoalRad) {
 
         m_turret = turret;
-        m_turretGoal = turretGoal;
+        m_turretGoalRad = turretGoalRad;
 
         addRequirements(m_turret);
 
@@ -22,10 +22,10 @@ public class setTurretGoal extends CommandBase {
 
     @Override
     public void initialize() {
-        if (m_turretGoal == Units.degreesToRadians(180) && m_turret.getAngle() <= 0) {
-            m_turretGoal = Units.degreesToRadians(-180);
+        if (Units.radiansToDegrees(m_turretGoalRad) == 180 && m_turret.getAngleDeg() <= 0) {
+            m_turretGoalRad = Units.degreesToRadians(-180);
         }
-        m_goal = new TrapezoidProfile.State(m_turretGoal, 0);
+        m_goal = new TrapezoidProfile.State(m_turretGoalRad, 0);
         m_turret.setGoal(m_goal);
     }
     

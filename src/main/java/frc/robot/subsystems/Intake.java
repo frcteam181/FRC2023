@@ -14,11 +14,12 @@ public class Intake extends SubsystemBase {
     private CANSparkMax m_leftIntake, m_rightIntake;
     private RelativeEncoder m_encoder;
     private SparkMaxPIDController m_intakePID;
+    
 
     public Intake() {
 
-        m_leftIntake = new CANSparkMax(k_LEFT_INTAKE, MotorType.kBrushless);
-        m_rightIntake = new CANSparkMax(k_RIGHT_INTAKE, MotorType.kBrushless);
+        m_leftIntake = new CANSparkMax(k_LEFT_CLAW /*k_LEFT_INTAKE*/, MotorType.kBrushless);
+        m_rightIntake = new CANSparkMax(k_RIGHT_CLAW /*k_LEFT_INTAKE*/, MotorType.kBrushless);
 
         m_leftIntake.restoreFactoryDefaults();
         m_rightIntake.restoreFactoryDefaults();

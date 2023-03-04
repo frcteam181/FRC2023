@@ -70,7 +70,7 @@ public class Arm2 extends SubsystemBase {
         m_spoolHomeBeam = new DigitalInput(k_SPOOL_HOME_BEAM_ID);
         m_spoolMaxBeam = new DigitalInput(k_SPOOL_MAX_BEAM_ID);
 
-        m_claw = new DoubleSolenoid(PneumaticsModuleType.REVPH, k_CLAW_GRAB, k_CLAW_RELEASE);
+        m_claw = new DoubleSolenoid(PneumaticsModuleType.REVPH, k_CLAW_CLOSE, k_CLAW_OPEN);
 
     }
 

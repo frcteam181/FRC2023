@@ -67,7 +67,7 @@ public class CompetitionTab {
         RamseteCommand ramseteCommand = new RamseteCommand(exampleTrajectory, m_driveBase::getPose, m_driveBase.getRAMController(), k_driveKinematics, m_driveBase::followPath, m_driveBase);
 
         // Reset odometry to the starting pose of the trajectory.
-        m_driveBase.resetOdometry(exampleTrajectory.getInitialPose());
+        m_driveBase.resetPose(exampleTrajectory.getInitialPose());
 
         // Run path following command, then stop at the end.
         return ramseteCommand.andThen(() -> m_driveBase.teleopDrive(0, 0));

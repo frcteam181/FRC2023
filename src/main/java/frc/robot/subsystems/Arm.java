@@ -13,8 +13,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -30,13 +28,14 @@ public class Arm extends TrapezoidProfileSubsystem {
     private RelativeEncoder m_pivotEncoder, m_spoolEncoder;
     private SparkMaxPIDController m_pivotPID, m_spoolPID;
     private ArmFeedforward m_armFF;
-    private double m_ffValue, m_ffEffort, m_pivotSetpointPos, m_pivotSetpointVel, m_pivotKp, m_pivotKi, m_pivotKd, m_pivotKg, m_spoolKp, m_spoolKi, m_spoolKd, m_spoolSetpoint, m_pivotKG_b_Gain;
+    private double m_ffValue, m_ffEffort, m_pivotSetpointPos, m_pivotSetpointVel, m_pivotKp, m_pivotKi, m_pivotKd, m_pivotKg, m_spoolKp, m_spoolKi, m_spoolKd, m_spoolSetpoint, m_pivotKG_b_Gain, m_pivotKG_m_Gain, m_pivotTuningSetpoint, m_spoolTuningSetpoint, m_pivotSetpointBuffer, m_spoolSetpointBuffer;
     private double[] m_pivotResponse, m_spoolResponse;
     private boolean m_isTuning;
     private DoubleSolenoid m_claw;
     private DigitalInput m_pivotHomeBeam, m_pivotZeroBeam, m_spoolHomeBeam, m_spoolMaxBeam;
     private ShuffleboardTab m_tab;
-    private GenericEntry m_pivotKpEntry, m_pivotKiEntry, m_pivotKdEntry, m_pivotKgEntry, m_spoolKpEntry, m_spoolKiEntry, m_spoolKdEntry, m_pivotAngleEntry, m_pivotSetpointAngleEntry, m_pivotOutputVoltageEntry, m_spoolPosEntry, m_spoolSetpointEntry, m_spoolOutputVoltageEntry, m_pivotKG_b_GainEntry;
+    private GenericEntry m_pivotKpEntry, m_pivotKiEntry, m_pivotKdEntry, m_pivotKgEntry, m_spoolKpEntry, m_spoolKiEntry, m_spoolKdEntry, m_pivotAngleEntry, m_pivotSetpointAngleEntry, m_pivotOutputVoltageEntry, m_spoolPosEntry, m_spoolSetpointEntry, m_spoolOutputVoltageEntry, m_pivotKG_b_GainEntry, m_pivotKG_m_GainEntry, m_pivotTuningSetpointEntry, m_spoolTuningSetpointEntry;
+    private TrapezoidProfile.State m_pivotTuningState;
     
     public Arm() {
 
@@ -84,17 +83,19 @@ public class Arm extends TrapezoidProfileSubsystem {
         m_spoolEncoder.setPositionConversionFactor(k_spoolPosFac);
 
         m_spoolPID = m_spool.getPIDController();
-
+ 
         m_spoolPID.setP(k_SpoolGains.kP, k_SPOOL_SLOT_ID);
         m_spoolPID.setI(k_SpoolGains.kI, k_SPOOL_SLOT_ID);
         m_spoolPID.setD(k_SpoolGains.kD, k_SPOOL_SLOT_ID);
-        m_spoolPID.setIZone(k_SpoolGains.kIzone, k_SPOOL_SLOT_ID); 
+        m_spoolPID.setIZone(k_SpoolGains.kIzone, k_SPOOL_SLOT_ID);
         m_spoolPID.setFF(k_SpoolGains.kFF, k_SPOOL_SLOT_ID);
         m_spoolPID.setOutputRange(k_SpoolGains.kMinOutput, k_SpoolGains.kMaxOutput, k_SPOOL_SLOT_ID);
 
+        enableSpoolBreak();
+
         // claw
 
-        m_claw = new DoubleSolenoid(PneumaticsModuleType.REVPH, k_CLAW_GRAB, k_CLAW_RELEASE);
+        //m_claw = new DoubleSolenoid(PneumaticsModuleType.REVPH, k_CLAW_CLOSE, k_CLAW_OPEN);
 
         // Beams
 
@@ -116,12 +117,11 @@ public class Arm extends TrapezoidProfileSubsystem {
         m_pivotSetpointPos = setpoint.position;
         m_pivotSetpointVel = setpoint.velocity;
         m_ffValue = m_armFF.calculate(setpoint.position, setpoint.velocity);
-        calcFFEffort();
         m_pivotPID.setReference(setpoint.position, ControlType.kPosition, k_PIVOT_SLOT_ID, m_ffEffort);
     }
 
-    public Command setPivotGoal(double pivotGoal) {
-        return Commands.runOnce(() -> setGoal(pivotGoal), this);
+    public Command setPivotGoal(double pivotGoalRad) {
+        return Commands.runOnce(() -> setGoal(pivotGoalRad), this);
     }
 
     @Override
@@ -133,13 +133,8 @@ public class Arm extends TrapezoidProfileSubsystem {
 
     /* Pivot */
 
-    public void movePivotTo(double setpointAngle) {
-        m_pivotSetpointPos = Units.radiansToDegrees(setpointAngle);
-        m_pivotPID.setReference(setpointAngle, ControlType.kPosition, k_PIVOT_SLOT_ID, m_ffEffort);
-    }
-
     public double calcPivotKG() {
-        return ((k_pivotKG_m_Gain * m_pivotEncoder.getPosition()) + m_pivotKG_b_Gain);
+        return ((m_pivotKG_m_Gain * m_pivotEncoder.getPosition()) + m_pivotKG_b_Gain);
     }
 
     public void calcFFEffort() {
@@ -155,7 +150,7 @@ public class Arm extends TrapezoidProfileSubsystem {
     }
 
     public double getPivotAngleDeg() {
-        return Units.radiansToDegrees(m_pivotEncoder.getPosition());
+        return Units.radiansToDegrees(getPivotAngle());
     }
 
     public double getPivotSetpointAngle() {
@@ -241,6 +236,10 @@ public class Arm extends TrapezoidProfileSubsystem {
         m_spoolPID.setReference(setpoint, ControlType.kPosition, k_SPOOL_SLOT_ID);
     }
 
+    public void enableSpoolBreak() {
+        m_spool.setIdleMode(IdleMode.kBrake);
+    }
+
     /* Beams */
 
     public boolean isPivotHome() {
@@ -257,24 +256,6 @@ public class Arm extends TrapezoidProfileSubsystem {
 
     public boolean isSpoolMaxed() {
         return m_spoolMaxBeam.get();
-    }
-
-    /* Claw */
-
-    public void grabClaw() {
-        m_claw.set(Value.kForward);
-    }
-
-    public void releaseClaw() {
-        m_claw.set(Value.kReverse);
-    }
-
-    public void toggleClaw() {
-        if (m_claw.get() == Value.kForward) {
-            m_claw.set(Value.kReverse);
-        } else {
-            m_claw.set(Value.kForward);
-        }
     }
 
     //#region Utilities
@@ -295,10 +276,14 @@ public class Arm extends TrapezoidProfileSubsystem {
 
         m_tab = Shuffleboard.getTab("Arm Tuning");
 
-        // Pivot
+        // Pivot PID
         m_pivotKp = k_PivotGains.kP;
         m_pivotKi = k_PivotGains.kI;
         m_pivotKd = k_PivotGains.kD;
+
+        m_pivotTuningSetpoint = k_pivotOffset;
+
+        // Pivot FF
         m_pivotKg = k_pivotKg;
         m_pivotResponse = new double[2];
 
@@ -306,10 +291,12 @@ public class Arm extends TrapezoidProfileSubsystem {
         m_pivotKiEntry = m_tab.add("Pivot Ki", m_pivotKi).withPosition(0, 1).getEntry();
         m_pivotKdEntry = m_tab.add("Pivot Kd", m_pivotKd).withPosition(0, 2).getEntry();
         m_pivotKgEntry = m_tab.add("Pivot Kg", m_pivotKg).withPosition(0, 3).getEntry();
-        m_pivotKG_b_GainEntry = m_tab.add("Pivot Kg_b", m_pivotKG_b_Gain).withPosition(0, 3).getEntry();
+        m_pivotKG_b_GainEntry = m_tab.add("Pivot Kg_b", m_pivotKG_b_Gain).withPosition(0, 4).getEntry();
+        m_pivotKG_m_GainEntry = m_tab.add("Pivot Kg_m", m_pivotKG_m_Gain).withPosition(0, 5).getEntry();
 
         m_pivotAngleEntry = m_tab.add("Pivot Angle", getPivotAngleDeg()).withPosition(1, 0).getEntry();
         m_tab.addDoubleArray("Pivot Response", this::getPivotResponse).withPosition(1, 1).withSize(3, 3).withWidget(BuiltInWidgets.kGraph);
+        m_pivotTuningSetpointEntry = m_tab.add("Pivot Tuning Setpoint (deg)", m_pivotTuningSetpoint).withPosition(1, 4).getEntry();
         m_pivotSetpointAngleEntry = m_tab.add("Pivot Setpoint", getPivotSetpointAngle()).withPosition(2, 0).getEntry();
         m_pivotOutputVoltageEntry = m_tab.add("Pivot Output Voltage", getPivotOutput()).withPosition(3, 0).getEntry();
 
@@ -325,6 +312,7 @@ public class Arm extends TrapezoidProfileSubsystem {
 
         m_spoolPosEntry = m_tab.add("Spool Position", getSpoolPos()).withPosition(5, 0).getEntry();
         m_tab.addDoubleArray("Spool Response", this::getSpoolResponse).withPosition(5, 1).withSize(3, 3).withWidget(BuiltInWidgets.kGraph);
+        m_spoolTuningSetpointEntry = m_tab.add("Spool Tuning Setpoint (in)", m_spoolTuningSetpoint).withPosition(5, 4).getEntry();
         m_spoolSetpointEntry = m_tab.add("Spool Setpoint", getSpoolSetpoint()).withPosition(6, 0).getEntry();
         m_spoolOutputVoltageEntry = m_tab.add("Spool Output Voltage", getSpoolOutput()).withPosition(7, 0).getEntry();
 
@@ -338,16 +326,31 @@ public class Arm extends TrapezoidProfileSubsystem {
         var pivotKd = m_pivotKdEntry.getDouble(k_PivotGains.kD);
         var pivotKg = m_pivotKgEntry.getDouble(k_pivotKg);
         var pivotKG_b_Gain = m_pivotKG_b_GainEntry.getDouble(k_pivotKG_b_Gain);
+        var pivotKG_m_Gain = m_pivotKG_m_GainEntry.getDouble(k_pivotKG_m_Gain);
 
         if(pivotKp != m_pivotKp) {m_pivotPID.setP(pivotKp, k_PIVOT_SLOT_ID);m_pivotKp = pivotKp;}
         if(pivotKi != m_pivotKi) {m_pivotPID.setI(pivotKi, k_PIVOT_SLOT_ID);m_pivotKi = pivotKi;}
         if(pivotKd != m_pivotKd) {m_pivotPID.setD(pivotKd, k_PIVOT_SLOT_ID);m_pivotKd = pivotKd;}
         if(pivotKg != m_pivotKg) {m_armFF = new ArmFeedforward(k_pivotKs, pivotKg, k_pivotKv);m_pivotKg = pivotKg;}
         if(pivotKG_b_Gain != m_pivotKG_b_Gain) {m_pivotKG_b_Gain = pivotKG_b_Gain;}
+        if(pivotKG_m_Gain != m_pivotKG_m_Gain) {m_pivotKG_m_Gain = pivotKG_m_Gain;}
 
         m_pivotAngleEntry.setDouble(getPivotAngleDeg());
         m_pivotSetpointAngleEntry.setDouble(getPivotSetpointAngle());
         m_pivotOutputVoltageEntry.setDouble(getPivotOutput());
+
+        m_pivotSetpointBuffer = m_pivotTuningSetpointEntry.getDouble(Units.radiansToDegrees(k_pivotOffset));
+
+        if(m_pivotSetpointBuffer <= Units.radiansToDegrees(k_pivotOffset)) {
+            var pivotTuningSetpoint = Units.radiansToDegrees(k_pivotOffset);
+            if(pivotTuningSetpoint != m_pivotTuningSetpoint) {m_pivotTuningSetpoint = pivotTuningSetpoint;}
+        } else if (m_pivotSetpointBuffer >= Units.radiansToDegrees(k_maxPivotRad)) {
+            var pivotTuningSetpoint = Units.radiansToDegrees(k_maxPivotRad);
+            if(pivotTuningSetpoint != m_pivotTuningSetpoint) {m_pivotTuningSetpoint = pivotTuningSetpoint;}
+        } else {
+            var pivotTuningSetpoint = m_pivotSetpointBuffer;
+            if(pivotTuningSetpoint != m_pivotTuningSetpoint) {m_pivotTuningSetpoint = pivotTuningSetpoint;}
+        }
 
         // Spool
         var spoolKp = m_spoolKpEntry.getDouble(k_SpoolGains.kP);
@@ -362,6 +365,26 @@ public class Arm extends TrapezoidProfileSubsystem {
         m_spoolSetpointEntry.setDouble(getSpoolSetpoint());
         m_spoolOutputVoltageEntry.setDouble(getSpoolOutput());
 
+        m_spoolSetpointBuffer = m_spoolTuningSetpointEntry.getDouble(0);
+        if(m_spoolSetpointBuffer > Units.metersToInches(k_maxSpoolExtention)) {
+            var spoolTuningSetpoint = Units.metersToInches(k_maxSpoolExtention);
+            if(spoolTuningSetpoint != m_spoolTuningSetpoint) {m_spoolTuningSetpoint = spoolTuningSetpoint;}
+        } else if (m_spoolSetpointBuffer <= 0) {
+            var spoolTuningSetpoint = 0;
+            if(spoolTuningSetpoint != m_spoolTuningSetpoint) {m_spoolTuningSetpoint = spoolTuningSetpoint;}
+        } else {
+            var spoolTuningSetpoint = m_spoolSetpointBuffer;
+            if(spoolTuningSetpoint != m_spoolTuningSetpoint) {m_spoolTuningSetpoint = spoolTuningSetpoint;}
+        }
+
+    }
+
+    public void movePivotToTuning() {
+        this.setPivotGoal(Units.degreesToRadians(m_pivotTuningSetpoint));
+    }
+
+    public void moveSpoolToTuning() {
+        moveSpoolTo(Units.inchesToMeters(m_spoolTuningSetpoint));
     }
 
     //#endregion Tuning

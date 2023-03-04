@@ -1,5 +1,6 @@
 package frc.robot;
 
+import com.pathplanner.lib.auto.RamseteAutoBuilder;
 import com.pathplanner.lib.server.PathPlannerServer;
 
 import edu.wpi.first.wpilibj2.command.Command;
@@ -7,17 +8,19 @@ import frc.robot.controllers.DriverController;
 import frc.robot.controllers.OperatorController;
 import frc.robot.shuffleboard.CompetitionTab;
 import frc.robot.subsystems.Arm;
+import frc.robot.subsystems.Claw;
 import frc.robot.subsystems.DriveBase;
-import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Turret;
+
+import static frc.robot.Constants.*;
 
 public class RobotContainer {
 
   //Subsystems
   private DriveBase m_driveBase;
-  private Arm m_arm;
   private Turret m_turret;
-  private Intake m_intake;
+  private Arm m_arm;
+  private Claw m_claw;
 
   //Controllers
   private DriverController m_driverController;
@@ -26,19 +29,28 @@ public class RobotContainer {
   //Shuffleboard Tabs
   private final CompetitionTab m_competitionTab;
 
+  //Path Planning
+  private boolean m_isTuning;
+  private RamseteAutoBuilder m_autoBuilder;
+
   public RobotContainer() {
 
-    PathPlannerServer.startServer(5811);
+    // Path Planning Tuning
+    m_isTuning = false;
+    if(m_isTuning) {PathPlannerServer.startServer(5811);}
 
     //Subsystems
     m_driveBase = new DriveBase();
-    m_arm = new Arm();
     m_turret = new Turret();
-    m_intake = new Intake();
+    m_arm = new Arm();
+    m_claw = new Claw();
+
+    //Auto Builder
+    m_autoBuilder = new RamseteAutoBuilder(m_driveBase::getPose, m_driveBase::resetPose, k_RAMController, k_refDriveKinematics, m_driveBase::followPath, null, true, m_driveBase);
 
     //Controllers
     m_driverController = new DriverController(m_driveBase);
-    m_operatorController = new OperatorController(m_arm, m_turret, m_intake);
+    m_operatorController = new OperatorController(m_arm, m_turret, m_claw);
 
     //Shuffleboard Tabs
     m_competitionTab = new CompetitionTab(m_driveBase);
