@@ -4,13 +4,17 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
+import frc.robot.commands.arm_commands.extendSpool;
+import frc.robot.commands.arm_commands.freeMovePivot;
 import frc.robot.commands.arm_commands.pivotDown;
 import frc.robot.commands.arm_commands.pivotMoveToTuner;
-import frc.robot.commands.arm_commands.pivotUp;
+import frc.robot.commands.arm_commands.retractSpool;
+import frc.robot.commands.arm_commands.spoolMoveToTuner;
 import frc.robot.commands.claw_commands.clawSetSpeedTuner;
 import frc.robot.commands.claw_commands.closeClaw;
 import frc.robot.commands.claw_commands.intake;
 import frc.robot.commands.claw_commands.openClaw;
+import frc.robot.commands.claw_commands.outake;
 import frc.robot.commands.claw_commands.stopIntake;
 import frc.robot.commands.claw_commands.switchMode;
 import frc.robot.commands.default_commands.ArmDefaultCommand;
@@ -27,7 +31,6 @@ public class OperatorController {
     private XboxController m_operatorController;
     private JoystickButton m_a, m_b, m_x, m_y, m_lb, m_rb, m_sl, m_st, m_ls, m_rs;
     private POVButton m_up, m_upr, m_r, m_dwr, m_dw, m_dwl, m_l, m_upl;
-    private boolean m_isDefaultBinding;
 
     // Used Subsystems //
     private Arm m_arm;
@@ -65,7 +68,7 @@ public class OperatorController {
         m_upl = new POVButton(m_operatorController, 315);
 
         // Default Command
-        m_arm.setDefaultCommand(new ArmDefaultCommand(m_arm, m_turret, m_operatorController));
+        m_arm.setDefaultCommand(new ArmDefaultCommand(m_arm, m_turret, m_claw, m_operatorController));
 
         bindButtons();
 
@@ -74,26 +77,31 @@ public class OperatorController {
     public void bindButtons() {
 
         /* Pivot */
-        m_rb.whileTrue(new pivotDown(m_arm));
-        m_lb.whileTrue(new pivotUp(m_arm));
+        //m_rb.whileTrue(new freeMovePivot(m_arm, true));
+        //m_lb.whileTrue(new freeMovePivot(m_arm, false));
         m_b.onTrue(m_arm.setPivotGoal(0));
         m_a.onTrue(m_arm.setPivotGoal(k_pivotOffset));
-        //m_x.onTrue(new pivotMoveToTuner(m_arm));
+        //m_y.onTrue(new pivotMoveToTuner(m_arm));
 
         /* Spool */
-        //m_x.onTrue(new pivotMoveToTuner(m_arm));
+        //m_x.onTrue(new spoolMoveToTuner(m_arm));
+        m_lb.whileTrue(new retractSpool(m_arm));
+        m_rb.whileTrue(new extendSpool(m_arm));
 
         /* Claw */
 
         // Switch Game Piece Mode
-        m_x.onTrue(new switchMode(m_claw));
+        m_st.onTrue(new switchMode(m_claw));
         //m_x.onTrue(new openClaw(m_claw));
         //m_y.onTrue(new closeClaw(m_claw));
 
         // Intaking
-        m_st.onTrue(new intake(m_claw));
-        m_sl.onTrue(new stopIntake(m_claw));
+        //m_st.onTrue(new intake(m_claw));
+        //m_sl.onTrue(new stopIntake(m_claw));
         //m_x.onTrue(new clawSetSpeedTuner(m_claw));
+        //m_x.whileTrue(new intake(m_claw));
+        //m_y.onTrue(new outake(m_claw));
+        //m_st.onTrue(new stopIntake(m_claw));
 
         /* Turret */
         m_up.onTrue(new setTurretGoal(m_turret, 0));
