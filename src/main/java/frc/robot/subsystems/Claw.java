@@ -8,6 +8,7 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.PneumaticHub;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
@@ -22,11 +23,12 @@ public class Claw extends SubsystemBase {
     private CANSparkMax m_leftMotor, m_rightMotor;
     private RelativeEncoder m_encoder;
     private SparkMaxPIDController m_clawPID;
-    private boolean m_isTuning;
+    private boolean m_isTuning, m_isPistonOpen;
     private ShuffleboardTab m_tab;
     private GenericEntry m_clawKpEntry, m_clawKiEntry, m_clawKdEntry, m_clawTuningSpeedEntry;
     private double m_clawKp, m_clawKi, m_clawKd, m_setpointVel, m_clawTuningSpeed, m_clawSpeedBuffer;
     private double[] m_response;
+    private PneumaticHub m_ph;
     private DoubleSolenoid m_piston;
 
     public Claw() {
@@ -37,7 +39,8 @@ public class Claw extends SubsystemBase {
         m_leftMotor.restoreFactoryDefaults();
         m_rightMotor.restoreFactoryDefaults();
 
-        m_rightMotor.follow(m_leftMotor, true);
+        //m_rightMotor.follow(m_leftMotor, true); // right follows left
+        //m_leftMotor.follow(m_rightMotor, true); // left follows right
 
         //m_leftMotor.setOpenLoopRampRate(0.2);
         m_leftMotor.setClosedLoopRampRate(0.2);
@@ -45,7 +48,8 @@ public class Claw extends SubsystemBase {
         m_encoder = m_leftMotor.getEncoder();
         m_encoder.setVelocityConversionFactor(k_clawVelFac);
 
-        m_clawPID = m_leftMotor.getPIDController();
+        //m_clawPID = m_leftMotor.getPIDController(); // left
+        m_clawPID = m_rightMotor.getPIDController(); // right
 
         m_clawPID.setP(k_ClawGains.kP,k_CLAW_SLOT_ID);
         m_clawPID.setI(k_ClawGains.kI,k_CLAW_SLOT_ID);
@@ -54,7 +58,13 @@ public class Claw extends SubsystemBase {
         m_clawPID.setFF(k_ClawGains.kFF, k_CLAW_SLOT_ID);
         m_clawPID.setOutputRange(k_ClawGains.kMinOutput, k_ClawGains.kMaxOutput, k_CLAW_SLOT_ID);
 
-        m_piston = new DoubleSolenoid(PneumaticsModuleType.REVPH, k_CLAW_OPEN, k_CLAW_CLOSE);
+        m_ph = new PneumaticHub(k_PH);
+
+        m_ph.enableCompressorAnalog(k_minPressure, k_maxPressure);
+
+        m_piston = m_ph.makeDoubleSolenoid(k_CLAW_OPEN, k_CLAW_CLOSE);
+
+        close();
 
         m_isTuning = true;
         if(m_isTuning) {tune();}
@@ -71,6 +81,18 @@ public class Claw extends SubsystemBase {
     public void setSpeed(double setpointVel) {
         m_setpointVel = setpointVel;
         m_clawPID.setReference(setpointVel, ControlType.kVelocity, k_CLAW_SLOT_ID);
+    }
+
+    public void intakeOn() {
+        m_rightMotor.set(0.1);
+    }
+
+    public void outake() {
+        m_leftMotor.set(-0.5);
+    }
+
+    public void stopIntake() {
+        m_rightMotor.set(0);
     }
 
     public double getSetpointVel() {
@@ -90,15 +112,41 @@ public class Claw extends SubsystemBase {
     /* Piston */
 
     public void open() {
-        m_piston.set(Value.kForward);
+        m_isPistonOpen = true;
+        m_piston.set(DoubleSolenoid.Value.kForward);
     }
 
     public void close() {
-        m_piston.set(Value.kReverse);
+        m_isPistonOpen = false;
+        m_piston.set(DoubleSolenoid.Value.kReverse);
     }
 
     public void switchModes() {
-        m_piston.toggle();
+        if(m_isPistonOpen) {
+            close();
+        } else {
+            open();
+        }
+    }
+
+    public double getStoredPSI() {
+        return m_ph.getPressure(k_STORED_PSI);
+    }
+    
+    public double getWorkingPSI() {
+        return m_ph.getPressure(k_WORKING_PSI);
+    }
+    
+    public boolean getCompressorStatus() {
+        return m_ph.getCompressor();
+    }
+
+    public double getLeftIntakeVoltage() {
+        return (m_leftMotor.getAppliedOutput() * m_leftMotor.getBusVoltage());
+    }
+
+    public double getRightIntakeVoltage() {
+        return (m_rightMotor.getAppliedOutput() * m_rightMotor.getBusVoltage());
     }
 
     /* Tuning */
@@ -120,8 +168,11 @@ public class Claw extends SubsystemBase {
         m_clawKiEntry = m_tab.add("Claw Ki", m_clawKi).withPosition(0, 1).getEntry();
         m_clawKdEntry = m_tab.add("Claw Kd", m_clawKd).withPosition(0, 2).getEntry();
 
+        m_tab.addNumber("Left Voltage", this::getLeftIntakeVoltage).withPosition(4, 0);
+        m_tab.addNumber("Right Voltage", this::getRightIntakeVoltage).withPosition(5, 0);
+
         m_tab.addDoubleArray("Claw Response", this::getResponse).withPosition(1, 1).withSize(3, 3).withWidget(BuiltInWidgets.kGraph);
-        m_clawTuningSpeedEntry = m_tab.add("Claw Tuning Speed (m/s)", m_clawTuningSpeed).withPosition(1, 4).getEntry();
+        m_clawTuningSpeedEntry = m_tab.add("Claw Tuning Speed (meter sec)", m_clawTuningSpeed).withPosition(1, 4).getEntry();
 
     }
 

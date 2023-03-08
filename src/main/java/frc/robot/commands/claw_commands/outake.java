@@ -3,11 +3,11 @@ package frc.robot.commands.claw_commands;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.Claw;
 
-public class intake extends CommandBase {
+public class outake extends CommandBase {
 
     private Claw m_claw;
 
-    public intake(Claw claw) {
+    public outake(Claw claw) {
 
         m_claw = claw;
 
@@ -17,13 +17,8 @@ public class intake extends CommandBase {
 
     @Override
     public void initialize() {
-        //m_claw.setSpeed(0.1);
-        m_claw.intakeOn();
-    }
-
-    @Override
-    public void end(boolean interrupted) {
-        m_claw.stopIntake();
+        //m_claw.setSpeed(-1);
+        m_claw.outake();
     }
     
 }
