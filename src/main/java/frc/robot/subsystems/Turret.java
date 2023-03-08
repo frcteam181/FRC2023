@@ -57,7 +57,7 @@ public class Turret extends TrapezoidProfileSubsystem {
         m_turretFF = new SimpleMotorFeedforward(k_turretKs, k_turretKv, k_turretKa);
 
         /* Tuning */
-        m_isTuning = true;
+        m_isTuning = false;
         if(m_isTuning){tune();}
 
     }

@@ -22,7 +22,7 @@ public class setTurretGoal extends CommandBase {
 
     @Override
     public void initialize() {
-        if (Units.radiansToDegrees(m_turretGoalRad) == 180 && m_turret.getAngleDeg() <= 0) {
+        if (Units.radiansToDegrees(m_turretGoalRad) >= 179 && m_turret.getAngleDeg() <= 0) {
             m_turretGoalRad = Units.degreesToRadians(-180);
         }
         m_goal = new TrapezoidProfile.State(m_turretGoalRad, 0);
