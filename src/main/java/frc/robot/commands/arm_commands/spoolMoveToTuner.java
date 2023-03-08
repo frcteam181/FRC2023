@@ -16,7 +16,7 @@ public class spoolMoveToTuner extends CommandBase {
 
     @Override
     public void execute() {
-        m_arm.movePivotToTuning();
+        m_arm.moveSpoolToTuning();
     }
     
 }

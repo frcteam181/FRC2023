@@ -93,10 +93,6 @@ public class Arm extends TrapezoidProfileSubsystem {
 
         enableSpoolBreak();
 
-        // claw
-
-        //m_claw = new DoubleSolenoid(PneumaticsModuleType.REVPH, k_CLAW_CLOSE, k_CLAW_OPEN);
-
         // Beams
 
         m_pivotHomeBeam = new DigitalInput(k_PIVOT_HOME_BEAM_ID);
@@ -105,12 +101,12 @@ public class Arm extends TrapezoidProfileSubsystem {
         m_spoolMaxBeam = new DigitalInput(k_SPOOL_MAX_BEAM_ID);
 
         /* Tuning */
-        m_isTuning = true;
+        m_isTuning = false;
         if(m_isTuning){tune();}
 
     }
 
-    /* Trapezoid & Overrride */
+    /* Trapezoid & Overrride */ 
 
     @Override
     protected void useState(TrapezoidProfile.State setpoint) {
@@ -366,6 +362,9 @@ public class Arm extends TrapezoidProfileSubsystem {
         m_spoolOutputVoltageEntry.setDouble(getSpoolOutput());
 
         m_spoolSetpointBuffer = m_spoolTuningSetpointEntry.getDouble(0);
+        //var spoolTuningSetpoint = m_spoolSetpointBuffer;
+        //if(spoolTuningSetpoint != m_spoolTuningSetpoint) {m_spoolTuningSetpoint = spoolTuningSetpoint;}
+        
         if(m_spoolSetpointBuffer > Units.metersToInches(k_maxSpoolExtention)) {
             var spoolTuningSetpoint = Units.metersToInches(k_maxSpoolExtention);
             if(spoolTuningSetpoint != m_spoolTuningSetpoint) {m_spoolTuningSetpoint = spoolTuningSetpoint;}
