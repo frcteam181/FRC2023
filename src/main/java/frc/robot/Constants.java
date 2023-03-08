@@ -8,49 +8,51 @@ public final class Constants {
 
     /* Physical Robot Variables */
 
-    public static final double k_wheelDiameterMeters = Units.inchesToMeters(6);
-    public static final double k_trackWidthMeters = Units.inchesToMeters(22.65);
+    public static final double k_wheelDiameterMeters = Units.inchesToMeters(6.0);
+    public static final double k_trackWidthMeters = Units.inchesToMeters(18); //22.65
     public static final DifferentialDriveKinematics k_driveKinematics = new DifferentialDriveKinematics(k_trackWidthMeters);
     public static final double k_robotWeightKillograms = Units.lbsToKilograms(100);
     public static final double k_robotLengthMeters = Units.inchesToMeters(32.375);
     public static final double k_robotWidthMeters = Units.inchesToMeters(27.75);
-    public static final double k_robotMomentOfInnertia = k_robotLengthMeters * k_robotWidthMeters * k_robotWeightKillograms * (1/6);
-    public static final double k_gearRatio = 1;
-    public static final double k_maxRPM = 5676;
-    public static final double k_drivePosFac = (Math.PI * k_wheelDiameterMeters);
-    public static final double k_driveVelFac = (Math.PI * k_wheelDiameterMeters);
+    public static final double k_robotMomentOfInnertia = k_robotLengthMeters * k_robotWidthMeters * k_robotWeightKillograms * (1.0/6.0);
+    public static final double k_gearRatio = 8.45;
+    public static final double k_maxRPM = 5676.0;
+    public static final double k_drivePosFac = (Math.PI * k_wheelDiameterMeters * (1.0/k_gearRatio)); // rev -> meter
+    public static final double k_driveVelFac = (Math.PI * k_wheelDiameterMeters * (1.0/(60 * k_gearRatio))); // rev/min -> m/s
     //public static final LinearSystem<N2,N2,N2> k_botPlant = LinearSystemId.createDrivetrainVelocitySystem(DCMotor.getNEO(2), k_robotWeightKillograms, k_wheelDiameterMeters/2, k_trackWidthMeters/2, k_robotMomentOfInnertia, k_gearRatio);
 
     /* Reference Robot Variables */
 
-    public static final double k_refWheelDiameterMeters = Units.inchesToMeters(6);
+    public static final double k_refWheelDiameterMeters = Units.inchesToMeters(6.0);
     // Trackwidth Provided by SysId
     public static final DifferentialDriveKinematics k_refDriveKinematics = new DifferentialDriveKinematics(k_trackWidthMeters);
-    public static final double k_refRobotWeightKillograms = Units.lbsToKilograms(100);
+    public static final double k_refRobotWeightKillograms = Units.lbsToKilograms(100.0);
     public static final double k_refRobotLengthMeters = Units.inchesToMeters(32.375);
     public static final double k_refRobotWidthMeters = Units.inchesToMeters(27.75);
     public static final double k_refRobotMomentOfInnertia = k_refRobotLengthMeters * k_refRobotWidthMeters * k_refRobotWeightKillograms * (1/6);
-    public static final double k_refGearRatio = 1;
-    public static final double k_refMaxRPM = 5676;
+    public static final double k_refGearRatio = 1.0;
+    public static final double k_refMaxRPM = 5676.0;
     //public static final LinearSystem<N2,N2,N2> k_refPlant = LinearSystemId.createDrivetrainVelocitySystem(DCMotor.getNEO(2), k_refRobotWeightKillograms, k_refWheelDiameterMeters/2, k_refTrackWidthMeters/2, k_refRobotMomentOfInnertia, k_refGearRatio);
 
     /* Drive Base Gains */
 
     public static final int k_DRIVE_SLOT_ID = 0;
     public static final int k_TURN_SLOT_ID = 1;
+    public static final double k_driveOpenLoopRamp = 0.85;
 
     // SysId variables for drivebase
-    public static final Gains k_DriveGains = new Gains(0, 0, 0, 0, 0, 0, 0);
-    public static final Gains k_TurnGains = new Gains(0, 0, 0, 0, 0, 0, 0);
-    public static final double k_driveFFKv = 0; // (Volts * Seconds) / Meter
+    public static final Gains k_DriveGains = new Gains(0.00078, 0, 0, 0, 0, -1, 1);
+    public static final Gains k_TurnGains = new Gains(0, 0, 0, 0, 0, -1, 1);
+    public static final double k_driveFFKs = 0; // (Volts * Seconds) / Meter
+    public static final double k_driveFFKv = 0;
     public static final double k_driveFFKa = 0; // (Volts * Seconds^2) / Meter
     public static final double k_angularFFKv = 0;
     public static final double k_angularFFKa = 0;
-    public static final double k_MaxSpeedMetersPerSecond = 1;
+    public static final double k_MaxSpeedMetersPerSecond = 1.0;
     public static final double k_MaxAccelerationMetersPerSecondSquared = 0.5;
     public static final double k_refTrackWidthMeters = 0;
 
-    // Reasonable baseline values for a RAMSETE follower in units of meters and seconds
+    // Reasonable baseline values for a RAMSETE follower in units of meters and seconds // 2, 0.7
     public static final RamseteController k_RAMController = new RamseteController(2, 0.7);
 
     /* Arm Gains */
@@ -60,6 +62,7 @@ public final class Constants {
     public static final double k_pivotKG_m_Gain = 0;
     public static final double k_pivotKG_b_Gain = 0.5;
     public static final double k_pivotOffset = Units.degreesToRadians(-62.6);
+    public static final double k_maxPivotAngle = Units.degreesToRadians(20);
     public static final double k_pivotSafetyAngleDeg = -20;
     public static final double k_maxPivotVel = 1.2;
     public static final double k_maxPivotAcc = 1;
@@ -74,7 +77,7 @@ public final class Constants {
 
     // Spool
     public static final int k_SPOOL_SLOT_ID = 0;
-    public static final double k_spoolPosFac = 1;
+    public static final double k_spoolPosFac = Units.inchesToMeters(Math.PI/80.0);
     public static final double k_maxSpoolExtention = Units.inchesToMeters(20);
     public static final Gains k_SpoolGains = new Gains(0, 0, 0, 0, 0, -1, 1);
 
@@ -82,7 +85,7 @@ public final class Constants {
     public static final int k_CLAW_SLOT_ID = 0;
     public static final double k_maxClawVel = 4; // m/s
     public static final Gains k_ClawGains = new Gains(0, 0, 0, 0, 0, -1, 1);
-    public static final double k_clawVelFac = (Units.inchesToMeters(4) * Math.PI);
+    public static final double k_clawVelFac = (Units.inchesToMeters(4 * Math.PI) / 60.0);
 
     // Numatic Values
     public static final int k_minPressure = 100;
@@ -160,7 +163,5 @@ public final class Constants {
     // Claw Channels
     public static final int k_CLAW_CLOSE = 0;
     public static final int k_CLAW_OPEN = 1;
-
-    // PDH Ports
 
 }
