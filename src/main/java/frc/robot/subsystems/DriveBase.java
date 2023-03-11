@@ -1,16 +1,13 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.sensors.WPI_Pigeon2;
-import com.pathplanner.lib.PathPlannerTrajectory;
-import com.pathplanner.lib.commands.PPRamseteCommand;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
-import edu.wpi.first.math.controller.DifferentialDriveWheelVoltages;
-import edu.wpi.first.math.controller.ImplicitModelFollower;
+import edu.wpi.first.math.controller.DifferentialDriveFeedforward;
 import edu.wpi.first.math.controller.RamseteController;
 import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -25,9 +22,6 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import static frc.robot.Constants.*;
@@ -47,19 +41,13 @@ public class DriveBase extends SubsystemBase {
   private double[] m_leftResponse, m_rightResponse;
   private double m_driveKp, m_driveKi, m_driveKd, m_driveFFKv, m_driveFFKa, m_angularFFKv, m_angularFFKa, m_leftSetpointVel, m_rightSetpointVel, m_driveOpenLoopRamp;
   private GenericEntry m_driveKpEntry, m_driveKiEntry, m_driveKdEntry, m_driveFFKvEntry, m_driveFFKaEntry, m_angularFFKvEntry, m_angularFFKaEntry, m_driveOpenLoopRampEntry;
-  private DifferentialDriveWheelVoltages m_diffDriveVoltages;
-
-  private ImplicitModelFollower m_implicitModelFollower;
-
-  //private ChassisSpeeds m_chassisSpeed;
-  //private DifferentialDriveWheelSpeeds m_wheelSpeed;
   private RamseteController m_RAMController;
-  private PPRamseteCommand m_PPRamseteCommand;
+  private DifferentialDriveFeedforward m_diffDriveFF;
 
   //#Simulation
   //#endregion
 
-  public DriveBase() {
+  public DriveBase(boolean isTuning) {
 
     m_leftLeader = new CANSparkMax(k_LEFT_LEADER, MotorType.kBrushless);
     m_leftFollower = new CANSparkMax(k_LEFT_FOLLOWER, MotorType.kBrushless);
@@ -78,6 +66,7 @@ public class DriveBase extends SubsystemBase {
     m_rightLeader.setInverted(true);
 
     m_diffDrive = new DifferentialDrive(m_leftLeader, m_rightLeader);
+    m_diffDrive.setDeadband(k_DriverDeadband);
 
     m_leftEncoder = m_leftLeader.getEncoder();
     m_leftEncoder.setPositionConversionFactor(k_drivePosFac);
@@ -110,19 +99,7 @@ public class DriveBase extends SubsystemBase {
 
     m_rightLeader.setOpenLoopRampRate(k_driveOpenLoopRamp);
 
-    m_leftPID.setP(k_TurnGains.kP, k_TURN_SLOT_ID);
-    m_leftPID.setI(k_TurnGains.kI, k_TURN_SLOT_ID);
-    m_leftPID.setD(k_TurnGains.kD, k_TURN_SLOT_ID);
-    m_leftPID.setIZone(k_TurnGains.kIzone, k_TURN_SLOT_ID);
-    m_leftPID.setFF(k_TurnGains.kFF, k_TURN_SLOT_ID);
-    m_leftPID.setOutputRange(k_TurnGains.kMinOutput, k_TurnGains.kMaxOutput, k_TURN_SLOT_ID);
-
-    m_rightPID.setP(k_TurnGains.kP, k_TURN_SLOT_ID);
-    m_rightPID.setI(k_TurnGains.kI, k_TURN_SLOT_ID);
-    m_rightPID.setD(k_TurnGains.kD, k_TURN_SLOT_ID);
-    m_rightPID.setIZone(k_TurnGains.kIzone, k_TURN_SLOT_ID);
-    m_rightPID.setFF(k_TurnGains.kFF, k_TURN_SLOT_ID);
-    m_rightPID.setOutputRange(k_TurnGains.kMinOutput, k_TurnGains.kMaxOutput, k_TURN_SLOT_ID);
+    //m_diffDriveFF = new DifferentialDriveFeedforward(k_driveFFKv, k_driveFFKa, k_angularFFKv, k_angularFFKa, k_trackWidthMeters);
 
     m_pdh = new PowerDistribution(k_PDH, ModuleType.kRev);
 
@@ -133,18 +110,9 @@ public class DriveBase extends SubsystemBase {
     m_odometry = new DifferentialDrivePoseEstimator(k_driveKinematics, getRotation2d(), getLeftPosition(), getRightPosition(), new Pose2d(0, 0, getRotation2d()));
 
     m_RAMController = k_RAMController;
-    
-    /*
-    m_chassisSpeed = m_RAMController.calculate(getPose(), null);
-    m_wheelSpeed = k_driveKinematics.toWheelSpeeds(m_chassisSpeed);
-    var left = m_wheelSpeed.leftMetersPerSecond;
-    var right = m_wheelSpeed.rightMetersPerSecond;*/
-
-    //m_implicitModelFollower = new ImplicitModelFollower<>(k_botPlant, k_refPlant);
-    //m_implicitModelFollower.calculate(null, null);
 
     /* Tuning */
-    m_isTuning = true;
+    m_isTuning = isTuning;
     if(m_isTuning){tune();}
   }
 
@@ -161,7 +129,7 @@ public class DriveBase extends SubsystemBase {
   }
 
   public void teleopDrive(double speedValue, double rotationValue) {
-    m_diffDrive.arcadeDrive(deadband(speedValue), deadband(rotationValue), true);
+    m_diffDrive.arcadeDrive(speedValue, rotationValue * 0.6, true);
   }
 
   public Field2d getField() {
@@ -364,7 +332,7 @@ public class DriveBase extends SubsystemBase {
     if(driveOpenLoopRamp != m_driveOpenLoopRamp) {m_leftLeader.setOpenLoopRampRate(driveOpenLoopRamp); m_rightLeader.setOpenLoopRampRate(driveOpenLoopRamp); m_driveOpenLoopRamp = driveOpenLoopRamp;}
     
     // FF Gains
-    /*var driveFFKv = m_driveFFKvEntry.getDouble(k_driveFFKv);
+    var driveFFKv = m_driveFFKvEntry.getDouble(k_driveFFKv);
     var driveFFKa = m_driveFFKaEntry.getDouble(k_driveFFKa);
     var angularFFKv = m_angularFFKvEntry.getDouble(k_angularFFKv);
     var angularFFKa = m_angularFFKaEntry.getDouble(k_angularFFKa);
@@ -376,8 +344,12 @@ public class DriveBase extends SubsystemBase {
       m_driveFFKa = driveFFKa;
       m_angularFFKv = angularFFKv;
       m_angularFFKa = angularFFKa;
-    }*/
+    }
 
+  }
+
+  public boolean isTuning() {
+    return m_isTuning;
   }
 
   //#endregion Tuning

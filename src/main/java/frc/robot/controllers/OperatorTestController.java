@@ -28,7 +28,7 @@ import frc.robot.subsystems.Turret;
 
 import static frc.robot.Constants.*;
 
-public class OperatorController {
+public class OperatorTestController {
 
     private XboxController m_operatorController;
     private JoystickButton m_a, m_b, m_x, m_y, m_lb, m_rb, m_sl, m_st, m_ls, m_rs;
@@ -40,7 +40,7 @@ public class OperatorController {
     private Turret m_turret;
     private Claw m_claw;
 
-    public OperatorController(Arm arm, Spool spool, Turret turret, Claw claw) {
+    public OperatorTestController(Arm arm, Spool spool, Turret turret, Claw claw) {
         
         // Used Subsystems Instances //
         m_arm = arm;
@@ -49,7 +49,7 @@ public class OperatorController {
         m_spool = spool;
 
         // Xbox Controllers
-        m_operatorController = new XboxController(k_OERATOR_CONTROLLER);
+        m_operatorController = new XboxController(k_OPERATOR_TEST_CONTROLLER);
 
         // Xbox Controller Buttons
         m_st = new JoystickButton(m_operatorController, XboxController.Button.kStart.value);
@@ -83,21 +83,47 @@ public class OperatorController {
         /* Pivot */
         m_rb.whileTrue(new freeMovePivot(m_arm, true)).onFalse(m_arm.setFinalPivotGoal());
         m_lb.whileTrue(new freeMovePivot(m_arm, false)).onFalse(m_arm.setFinalPivotGoal());
-        
+        //m_b.onTrue(m_arm.setPivotGoal(0));
+        //m_a.onTrue(m_arm.setPivotGoal(k_pivotOffsetRad));
+        //m_y.onTrue(m_arm.setTuningPivotGoal());
+
+        /* Spool */
+        //m_x.onTrue(new spoolMoveToTuner(m_arm));
+        //m_lb.whileTrue(new retractSpool(m_arm));
+        //m_rb.whileTrue(new extendSpool(m_arm));
+
+
+        /* Claw */
+ 
+        // Switch Game Piece Mode
+        //m_st.onTrue(new switchMode(m_claw));
+        //m_x.onTrue(new openClaw(m_claw));
+        //m_y.onTrue(new closeClaw(m_claw));
+
+        // Intaking
+        //m_st.onTrue(new intake(m_claw));
+        //m_sl.onTrue(new stopIntake(m_claw));
+        //m_x.onTrue(new clawSetSpeedTuner(m_claw));
+        //m_x.whileTrue(new intake(m_claw));
+        //m_y.onTrue(new outake(m_claw));
+        //m_st.onTrue(new stopIntake(m_claw));
+
+        /* Turret */
+        //m_rb.whileTrue(new freeMoveTurret(m_turret, true));
+        //m_lb.whileTrue(new freeMoveTurret(m_turret, false));
         m_up.onTrue(m_turret.setTurretGoal(Units.degreesToRadians(0)));
         m_l.onTrue(m_turret.setTurretGoal(Units.degreesToRadians(90)));
         m_r.onTrue(m_turret.setTurretGoal(Units.degreesToRadians(-90)));
         m_dw.onTrue(m_turret.setTurretGoal(Units.degreesToRadians(180)));
-        
+        //m_x.onTrue(new turretMoveToTuner(m_turret));
         m_sl.whileTrue(m_spool.retractCommand()).onFalse(m_spool.stopCommand());
         m_st.whileTrue(m_spool.extendCommand()).onFalse(m_spool.stopCommand());
 
         /* Presets */
-        m_x.onTrue(m_spool.moveToCommand(Units.inchesToMeters(0)).andThen(m_arm.setPivotGoal(k_pivotHomeRad)));
-        m_b.onTrue(m_arm.setPivotGoal(k_pivotHorizontalRad).andThen(m_spool.moveToCommand(Units.inchesToMeters(10))));
+        m_x.onTrue(m_spool.moveToCommand(Units.inchesToMeters(0)).andThen(m_arm.setPivotGoal(k_pivotOffsetRad)));
+        m_b.onTrue(m_arm.setPivotGoal(0).andThen(m_spool.moveToCommand(Units.inchesToMeters(10))));
         m_y.onTrue(m_arm.setPivotGoal(k_pivotHighScoreRad).andThen(m_spool.moveToCommand(Units.inchesToMeters(20))));
         m_a.onTrue(m_arm.setPivotGoal(k_pivotGroudIntake).andThen(m_spool.moveToCommand(Units.inchesToMeters(14.173))));
-        
     }
 
 }

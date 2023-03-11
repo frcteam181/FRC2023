@@ -17,8 +17,7 @@ public class stopIntake extends CommandBase {
 
     @Override
     public void initialize() {
-        //m_claw.setSpeed(0);
-        m_claw.stopIntake();
+        m_claw.setSpeed(0);
     }
     
 }

@@ -15,27 +15,25 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.TrapezoidProfileSubsystem;
 
 import static frc.robot.Constants.*;
  
-public class Turret extends SubsystemBase {
+public class Turret2 extends TrapezoidProfileSubsystem {
 
     private CANSparkMax m_turretMotor;
     private RelativeEncoder m_encoder;
     private SparkMaxPIDController m_turretPID;
     private SimpleMotorFeedforward m_turretFF;
-    private double m_period, m_ffValue, m_setpointPos, m_setpointVel, m_turretKp, m_turretKi, m_turretKd, m_turretKs, m_turretTuningSetpoint, m_turretSetpointBuffer;
+    private double m_ffValue, m_setpointPos, m_setpointVel, m_turretKp, m_turretKi, m_turretKd, m_turretKs, m_turretTuningSetpoint, m_turretSetpointBuffer;
     private double[] m_response;
-    private boolean m_isTuning, m_enabled;
+    private boolean m_isTuning;
     private ShuffleboardTab m_tab;
     private GenericEntry m_turretKpEntry, m_turretKiEntry, m_turretKdEntry, m_turretKsEntry, m_turretAngleEntry, m_turretSetpointEntry, m_turretOutputVoltageEntry, m_turretTuningSetpointEntry;
-    private TrapezoidProfile.State m_state, m_goal;
-    private TrapezoidProfile.Constraints m_constraints;
 
-    public Turret(boolean isTuning) {
+    public Turret2() {
 
-        TrapezoidProfileSubsystem(new TrapezoidProfile.Constraints(k_maxTurretVel, k_maxTurretAcc), k_turretOffset, 0.02);
+        super(new TrapezoidProfile.Constraints(k_maxTurretVel, k_maxTurretAcc), k_turretOffset);
 
         m_turretMotor = new CANSparkMax(k_TURRET, MotorType.kBrushless);
 
@@ -44,9 +42,8 @@ public class Turret extends SubsystemBase {
         m_turretMotor.setInverted(false);
 
         m_encoder = m_turretMotor.getEncoder();
-
         m_encoder.setPositionConversionFactor(k_turretPosFacRad);
-        m_encoder.setVelocityConversionFactor(k_turretVelFacRadPerSec);
+        //m_encoder.setVelocityConversionFactor(k_turretVelFac);
 
         m_turretPID = m_turretMotor.getPIDController();
 
@@ -59,77 +56,40 @@ public class Turret extends SubsystemBase {
 
         m_turretFF = new SimpleMotorFeedforward(k_turretKs, k_turretKv, k_turretKa);
 
-        enable();
-
         /* Tuning */
-        m_isTuning = isTuning;
+        m_isTuning = false;
         if(m_isTuning){tune();}
 
     }
 
+    @Override
     protected void useState(TrapezoidProfile.State setpoint) {
         m_setpointPos = setpoint.position;
         m_setpointVel = setpoint.velocity;
-        //m_ffValue = m_turretFF.calculate(setpoint.position, setpoint.velocity);
-        m_turretPID.setReference(setpoint.position, ControlType.kPosition, k_PIVOT_SLOT_ID/*, m_ffValue/12*/);
+        m_ffValue = m_turretFF.calculate(setpoint.position, setpoint.velocity);
+        m_turretPID.setReference(setpoint.position, ControlType.kPosition, k_PIVOT_SLOT_ID, m_ffValue/12);
     }
 
     @Override
     public void periodic() {
+        super.periodic();
         if(m_isTuning){tuningPeriodic();}
-
-        var profile = new TrapezoidProfile(m_constraints, m_goal, m_state);
-        m_state = profile.calculate(m_period);
-        if (m_enabled) {
-            useState(m_state);
-        }
     }
 
-    public void TrapezoidProfileSubsystem(TrapezoidProfile.Constraints constraints, double initialPosition, double period) {
-        m_constraints = constraints;
-        m_state = new TrapezoidProfile.State(initialPosition, 0);
-        setGoal(initialPosition);
-        m_period = period;
+    public void test() {
+        
     }
 
-    public void setGoal(TrapezoidProfile.State goal) {
-        System.out.println("Goal Updated!");
-        m_goal = goal;
+    public Command setTurretGoal(double pivotGoal) {
+        return Commands.runOnce(() -> setGoal(pivotGoal), this);
     }
 
-    public void setGoal(double goal) {
-        System.out.println("Turret Goal Set!");
-        setGoal(new TrapezoidProfile.State(goal, 0));
-    }
-
-    public Command setTurretGoal(double turretGoalRad) {
-        System.out.println("Command Called!");
-        return Commands.runOnce(() -> setGoal(turretGoalRad), this);
-    }
-
-    public void updateState() {
-        m_state = new TrapezoidProfile.State(getAngleRad(), 0);
-    }
-
-    public Command setFinalTurretGoal() {
-        enable();
-        return Commands.runOnce(() -> setGoal(getAngleRad()), this);
-    }
-
-    public void disable() {
-        m_enabled = false;
-    }
-
-    public void enable() {
-        m_enabled = true;
-    }
-
-    public double getAngleRad() {
+    public double getAngle() {
         return m_encoder.getPosition();
     }
 
     public double getAngleDeg() {
-        return Units.radiansToDegrees(getAngleRad());
+        return Units.radiansToDegrees(getAngle());
     }
 
     public double getSetpointAngleDeg() {
@@ -145,7 +105,7 @@ public class Turret extends SubsystemBase {
     }
 
     public void move(double value) {
-        m_turretMotor.set(value);
+        m_turretMotor.set(deadband(value));
     }
 
     public void stop() {
@@ -160,6 +120,16 @@ public class Turret extends SubsystemBase {
         m_response[0] = getSetpointAngleDeg();
         m_response[1] = getAngleDeg();
         return m_response;
+    }
+
+    /* Utilities */
+
+    public double deadband(double value) {
+        if (Math.abs(value) >= k_OperatorDeadband) {
+            return value;
+        } else {
+            return 0;
+        }
     }
 
     /* Tuning */
@@ -180,7 +150,7 @@ public class Turret extends SubsystemBase {
         m_turretKs = k_turretKs;
         m_response = new double[2];
 
-        m_turretAngleEntry = m_tab.add("Turret Angle", getAngleRad()).withPosition(1, 0).getEntry();
+        m_turretAngleEntry = m_tab.add("Turret Angle", getAngle()).withPosition(1, 0).getEntry();
         m_tab.addDoubleArray("Response", this::getResponse).withPosition(1, 1).withSize(3, 3).withWidget(BuiltInWidgets.kGraph);
         m_turretTuningSetpointEntry = m_tab.add("Turret Tuning Setpoint (deg)", m_turretTuningSetpoint).withPosition(1, 4).getEntry();
         m_turretSetpointEntry = m_tab.add("Turret Setpoint", getSetpointAngleDeg()).withPosition(2, 0).getEntry();
@@ -216,7 +186,7 @@ public class Turret extends SubsystemBase {
         if(turretKd != m_turretKd) {m_turretPID.setD(turretKd, k_TURRET_SLOT_ID);m_turretKd = turretKd;}
         if(turretKs != m_turretKs) {m_turretFF = new SimpleMotorFeedforward(turretKs, k_turretKv, k_turretKa);m_turretKs = turretKs;}
 
-        m_turretAngleEntry.setDouble(getAngleRad());
+        m_turretAngleEntry.setDouble(getAngle());
         m_turretSetpointEntry.setDouble(getSetpointAngleDeg());
         m_turretOutputVoltageEntry.setDouble(getOutputVoltage());
 

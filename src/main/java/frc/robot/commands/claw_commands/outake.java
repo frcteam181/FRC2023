@@ -17,8 +17,7 @@ public class outake extends CommandBase {
 
     @Override
     public void initialize() {
-        //m_claw.setSpeed(-1);
-        m_claw.outake();
+        m_claw.setSpeed(-0.5);
     }
     
 }

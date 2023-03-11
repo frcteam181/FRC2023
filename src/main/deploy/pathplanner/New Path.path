@@ -2,13 +2,13 @@
   "waypoints": [
     {
       "anchorPoint": {
-        "x": 2.0,
+        "x": 3.2,
         "y": 0.92
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.0,
-        "y": 0.92
+        "x": 2.2,
+        "y": 0.9200000000000002
       },
       "holonomicAngle": 0,
       "isReversal": false,
@@ -17,7 +17,7 @@
       "isStopPoint": false,
       "stopEvent": {
         "names": [
-          "pivotMidPeg"
+          "pivotHighPeg"
         ],
         "executionBehavior": "parallel",
         "waitBehavior": "none",
@@ -26,16 +26,41 @@
     },
     {
       "anchorPoint": {
-        "x": 3.5,
+        "x": 2.0,
         "y": 0.92
       },
       "prevControl": {
-        "x": 2.5,
-        "y": 0.9199999999999998
+        "x": 3.000000000000001,
+        "y": 0.92
       },
       "nextControl": {
-        "x": 4.5,
-        "y": 0.9199999999999998
+        "x": 3.000000000000001,
+        "y": 0.92
+      },
+      "holonomicAngle": 0,
+      "isReversal": true,
+      "velOverride": null,
+      "isLocked": false,
+      "isStopPoint": false,
+      "stopEvent": {
+        "names": [],
+        "executionBehavior": "parallel",
+        "waitBehavior": "none",
+        "waitTime": 0
+      }
+    },
+    {
+      "anchorPoint": {
+        "x": 4.062198148149267,
+        "y": 0.92
+      },
+      "prevControl": {
+        "x": 2.03824939764808,
+        "y": 0.92
+      },
+      "nextControl": {
+        "x": 6.086146898650455,
+        "y": 0.92
       },
       "holonomicAngle": 0,
       "isReversal": false,
@@ -51,12 +76,12 @@
     },
     {
       "anchorPoint": {
-        "x": 6.8,
+        "x": 6.4,
         "y": 0.92
       },
       "prevControl": {
-        "x": 5.8,
-        "y": 0.9199999999999998
+        "x": 5.4,
+        "y": 0.92
       },
       "nextControl": null,
       "holonomicAngle": 0,
@@ -72,14 +97,11 @@
       }
     }
   ],
-  "maxVelocity": 3.5,
-  "maxAcceleration": 2.5,
-  "isReversed": false,
   "markers": [
     {
-      "position": 1.454545454545418,
+      "position": 0.19636363636361903,
       "names": [
-        "pivotHome"
+        "turretLeft10"
       ]
     }
   ]

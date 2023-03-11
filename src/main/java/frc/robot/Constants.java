@@ -2,6 +2,9 @@ package frc.robot;
 
 import edu.wpi.first.math.controller.RamseteController;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
+import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.system.LinearSystem;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 
 public final class Constants {
@@ -9,7 +12,7 @@ public final class Constants {
     /* Physical Robot Variables */
 
     public static final double k_wheelDiameterMeters = Units.inchesToMeters(6.0);
-    public static final double k_trackWidthMeters = Units.inchesToMeters(18); //22.65
+    public static final double k_trackWidthMeters = Units.inchesToMeters(22.65); //22.65
     public static final DifferentialDriveKinematics k_driveKinematics = new DifferentialDriveKinematics(k_trackWidthMeters);
     public static final double k_robotWeightKillograms = Units.lbsToKilograms(100);
     public static final double k_robotLengthMeters = Units.inchesToMeters(32.375);
@@ -19,7 +22,6 @@ public final class Constants {
     public static final double k_maxRPM = 5676.0;
     public static final double k_drivePosFac = (Math.PI * k_wheelDiameterMeters * (1.0/k_gearRatio)); // rev -> meter
     public static final double k_driveVelFac = (Math.PI * k_wheelDiameterMeters * (1.0/(60 * k_gearRatio))); // rev/min -> m/s
-    //public static final LinearSystem<N2,N2,N2> k_botPlant = LinearSystemId.createDrivetrainVelocitySystem(DCMotor.getNEO(2), k_robotWeightKillograms, k_wheelDiameterMeters/2, k_trackWidthMeters/2, k_robotMomentOfInnertia, k_gearRatio);
 
     /* Reference Robot Variables */
 
@@ -32,7 +34,6 @@ public final class Constants {
     public static final double k_refRobotMomentOfInnertia = k_refRobotLengthMeters * k_refRobotWidthMeters * k_refRobotWeightKillograms * (1/6);
     public static final double k_refGearRatio = 1.0;
     public static final double k_refMaxRPM = 5676.0;
-    //public static final LinearSystem<N2,N2,N2> k_refPlant = LinearSystemId.createDrivetrainVelocitySystem(DCMotor.getNEO(2), k_refRobotWeightKillograms, k_refWheelDiameterMeters/2, k_refTrackWidthMeters/2, k_refRobotMomentOfInnertia, k_refGearRatio);
 
     /* Drive Base Gains */
 
@@ -42,7 +43,6 @@ public final class Constants {
 
     // SysId variables for drivebase
     public static final Gains k_DriveGains = new Gains(0.00078, 0, 0, 0, 0, -1, 1);
-    public static final Gains k_TurnGains = new Gains(0, 0, 0, 0, 0, -1, 1);
     public static final double k_driveFFKs = 0; // (Volts * Seconds) / Meter
     public static final double k_driveFFKv = 0;
     public static final double k_driveFFKa = 0; // (Volts * Seconds^2) / Meter
@@ -51,6 +51,7 @@ public final class Constants {
     public static final double k_MaxSpeedMetersPerSecond = 1.0;
     public static final double k_MaxAccelerationMetersPerSecondSquared = 0.5;
     public static final double k_refTrackWidthMeters = 0;
+    //public static final LinearSystem<N2,N2,N2> k_refPlant = LinearSystemId.identifyDrivetrainSystem(k_driveFFKv, k_driveFFKa, k_angularFFKv, k_angularFFKa, k_refTrackWidthMeters);
 
     // Reasonable baseline values for a RAMSETE follower in units of meters and seconds // 2, 0.7
     public static final RamseteController k_RAMController = new RamseteController(2, 0.7);
@@ -61,37 +62,35 @@ public final class Constants {
     public static final int k_PIVOT_SLOT_ID = 0;
     public static final double k_pivotKG_m_Gain = 0;
     public static final double k_pivotKG_b_Gain = 0.5;
-    public static final double k_pivotOffset = Units.degreesToRadians(-62.6);
-    public static final double k_maxPivotAngle = Units.degreesToRadians(20);
-    public static final double k_pivotSafetyAngleDeg = -20;
     public static final double k_maxPivotVel = 1.2;
     public static final double k_maxPivotAcc = 1;
-    public static final double k_maxPivotRad = Units.degreesToRadians(20);
-    public static final double k_pivotPosFac = Units.degreesToRadians(4.5);
-    public static final double k_pivotVelFac = Units.degreesToRadians(4.5);
-    public static final double k_pivotKs = 0;
-    public static final double k_pivotKg = 0;
-    public static final double k_pivotKv = 0;
-    public static final double k_pivotKa = 0;
-    public static final Gains k_PivotGains = new Gains(3, 0, 0.3, 0, 0, -1, 1);
+    public static final double k_pivotGearRatio = 1.0;
+    public static final double k_pivotPosFacRad = Units.degreesToRadians(360/k_pivotGearRatio);
+    public static final double k_pivotVelFacRadPerSec = k_pivotPosFacRad/60.0;
+    public static final Gains k_PivotGains = new Gains(0, 0, 0, 0, 0, -1, 1);
 
     // Spool
     public static final int k_SPOOL_SLOT_ID = 0;
-    public static final double k_spoolPosFac = Units.inchesToMeters(Math.PI/80.0);
-    public static final double k_maxSpoolExtention = Units.inchesToMeters(20);
-    public static final Gains k_SpoolGains = new Gains(0, 0, 0, 0, 0, -1, 1);
+    public static final double k_spoolGearRatio = 80.0;
+    public static final double k_spoolDiameterMeter = Units.inchesToMeters(1);
+    public static final double k_spoolPosFacMeter = (k_spoolDiameterMeter * Math.PI)/k_spoolGearRatio; //meter per rev
+    public static final double k_spoolVelFacMeterPerSec = k_spoolPosFacMeter/60.0; // m/s
+    public static final double k_maxSpoolExtentionMeter = Units.inchesToMeters(30);
+    public static final Gains k_SpoolGains = new Gains(15, 0, 0, 0, 0, -1, 1);
 
     // Claw
     public static final int k_CLAW_SLOT_ID = 0;
-    public static final double k_maxClawVel = 4; // m/s
+    public static final double k_clawWheelDiameterMeters = Units.inchesToMeters(4.0);
+    public static final double k_clawGearRatio = 4.0;
+    public static final double k_clawPosFacMeter = (k_clawWheelDiameterMeters * Math.PI)/k_clawGearRatio;
+    public static final double k_clawVelFacMeterPerSec = k_clawPosFacMeter/60.0;
+    public static final double k_maxClawVelMeter = 4.0; // m/s
     public static final Gains k_ClawGains = new Gains(0, 0, 0, 0, 0, -1, 1);
-    public static final double k_clawVelFac = (Units.inchesToMeters(4 * Math.PI) / 60.0);
+    
 
-    // Numatic Values
+    // Pneumatic Values
     public static final int k_minPressure = 100;
     public static final int k_maxPressure = 120;
-
-    // Beams
 
     /* Turret Gains */
 
@@ -100,8 +99,8 @@ public final class Constants {
     public static final double k_maxTurretVel = 3;
     public static final double k_maxTurretAcc = 1.5;
     public static final double k_turretOffset = 0;
-    public static final double k_turretPosFac = Units.degreesToRadians(0.77922077922);
-    public static final double k_turretVelFac = Units.degreesToRadians(0.77922077922);
+    public static final double k_turretPosFacRad = Units.degreesToRadians(0.77922077922);
+    public static final double k_turretVelFacRadPerSec = k_turretPosFacRad/60.0;
     public static final double k_turretKs = 2;
     public static final double k_turretKv = 0;
     public static final double k_turretKa = 0;
@@ -109,12 +108,15 @@ public final class Constants {
     /* Intake Gains */
 
     public static final int k_INTAKE_SLOT_ID = 0;
+    public static final double k_intakeSpeed = 2;
     public static final Gains k_IntakeGains = new Gains(0, 0, 0, 0, 0, -1, 1);
 
     /* Controller Ports */
 
     public static final int k_DRIVER_CONTROLLER = 0;
     public static final int k_OERATOR_CONTROLLER = 1;
+    public static final int k_DRIVER_TEST_CONTROLLER = 2;
+    public static final int k_OPERATOR_TEST_CONTROLLER = 3;
 
     /* Controller Deadbands */
 
@@ -125,6 +127,24 @@ public final class Constants {
 
     public static final int k_REFLECTIVE_PIPELINE = 0;
     public static final int k_APRIL_TAG_PIPELINE = 1;
+
+    /* Through bore encoder */
+
+    public static final int k_throughBoreEncoderCPR = 8192;
+
+    /* Presets */ /*-----------------------------------------------------------------------------*/ /* Presets */
+
+    // Angle Presets
+    public static final double k_addedAngleDeg = 71;
+    public static final double k_addedAngleRad = Units.degreesToRadians(k_addedAngleDeg);
+    public static final double k_pivotHomeRad = Units.degreesToRadians(-66 + k_addedAngleDeg);
+    public static final double k_maxPivotAngleRad = Units.degreesToRadians(20 + k_addedAngleDeg);
+    public static final double k_pivotHighScoreRad = Units.degreesToRadians(11 + k_addedAngleDeg);
+    public static final double k_pivotHorizontalRad = Units.degreesToRadians(0 + k_addedAngleDeg);
+    public static final double k_pivotSafetyAngleRad = Units.degreesToRadians(-45 + k_addedAngleDeg);
+    public static final double k_pivotGroudIntake = Units.degreesToRadians(-45 + k_addedAngleDeg);
+    public static final double k_pivotOffsetRad = Units.degreesToRadians(116.8); // Offs0et to ZERO 0 deg a.k.a. parallel to floor //66
+    //public static final double k_pivotThroughboreOffsetRad = Units.degreesToRadians(122 + 66);
 
     // Do not change anything after this line unless you rewire the robot and
     // update the spreadsheet!
