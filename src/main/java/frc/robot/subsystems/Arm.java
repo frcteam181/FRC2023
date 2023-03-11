@@ -34,7 +34,7 @@ public class Arm extends SubsystemBase {
     
     public Arm(boolean isTuning) {
 
-        TrapezoidProfileSubsystem(new TrapezoidProfile.Constraints(k_maxPivotVel, k_maxPivotAcc), k_pivotOffsetRad, 0.02);
+        TrapezoidProfileSubsystem(new TrapezoidProfile.Constraints(k_maxPivotVel, k_maxPivotAcc), k_pivotHomeRad/*k_pivotOffsetRad*/, 0.02);
 
         // motors
 
@@ -52,7 +52,7 @@ public class Arm extends SubsystemBase {
 
         m_pivotEncoder.setPositionConversionFactor(k_pivotPosFacRad);
         m_pivotEncoder.setVelocityConversionFactor(k_pivotVelFacRadPerSec);
-        m_pivotEncoder.setZeroOffset(k_pivotOffsetRad);
+        // m_pivotEncoder.setZeroOffset(k_pivotOffsetRad);
 
         m_pivotPID = m_leftPivot.getPIDController();
         m_pivotPID.setFeedbackDevice(m_pivotEncoder);
@@ -103,7 +103,8 @@ public class Arm extends SubsystemBase {
 
     @Override
     public void periodic() {
-        calcFFEffort();
+        // calcFFEffort();
+        calcFFEffortModified();
         if(m_isTuning){tuningPeriodic();}
 
         var profile = new TrapezoidProfile(m_constraints, m_goal, m_state);

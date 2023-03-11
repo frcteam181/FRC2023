@@ -135,15 +135,24 @@ public final class Constants {
     /* Presets */ /*-----------------------------------------------------------------------------*/ /* Presets */
 
     // Angle Presets
+    // public static final double k_addedAngleDeg = 71;
+    // public static final double k_addedAngleRad = Units.degreesToRadians(k_addedAngleDeg);
+    // public static final double k_pivotHomeRad = Units.degreesToRadians(-66 + k_addedAngleDeg);
+    // public static final double k_maxPivotAngleRad = Units.degreesToRadians(20 + k_addedAngleDeg);
+    // public static final double k_pivotHighScoreRad = Units.degreesToRadians(11 + k_addedAngleDeg);
+    // public static final double k_pivotHorizontalRad = Units.degreesToRadians(0 + k_addedAngleDeg);
+    // public static final double k_pivotSafetyAngleRad = Units.degreesToRadians(-45 + k_addedAngleDeg);
+    // public static final double k_pivotGroudIntake = Units.degreesToRadians(-45 + k_addedAngleDeg);
+
     public static final double k_addedAngleDeg = 71;
     public static final double k_addedAngleRad = Units.degreesToRadians(k_addedAngleDeg);
-    public static final double k_pivotHomeRad = Units.degreesToRadians(-66 + k_addedAngleDeg);
-    public static final double k_maxPivotAngleRad = Units.degreesToRadians(20 + k_addedAngleDeg);
-    public static final double k_pivotHighScoreRad = Units.degreesToRadians(11 + k_addedAngleDeg);
-    public static final double k_pivotHorizontalRad = Units.degreesToRadians(0 + k_addedAngleDeg);
-    public static final double k_pivotSafetyAngleRad = Units.degreesToRadians(-45 + k_addedAngleDeg);
-    public static final double k_pivotGroudIntake = Units.degreesToRadians(-45 + k_addedAngleDeg);
-    public static final double k_pivotOffsetRad = Units.degreesToRadians(116.8); // Offs0et to ZERO 0 deg a.k.a. parallel to floor //66
+    public static final double k_pivotHomeRad = Units.degreesToRadians(122);
+    public static final double k_maxPivotAngleRad = Units.degreesToRadians(210);
+    public static final double k_pivotHighScoreRad = Units.degreesToRadians(202);
+    public static final double k_pivotHorizontalRad = Units.degreesToRadians(188);
+    public static final double k_pivotSafetyAngleRad = Units.degreesToRadians(150);
+    public static final double k_pivotGroudIntake = Units.degreesToRadians(140);
+    public static final double k_pivotOffsetRad = Units.degreesToRadians(122); // Offs0et to ZERO 0 deg a.k.a. parallel to floor //66
     //public static final double k_pivotThroughboreOffsetRad = Units.degreesToRadians(122 + 66);
 
     // Do not change anything after this line unless you rewire the robot and
