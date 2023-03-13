@@ -1,30 +1,14 @@
 package frc.robot.controllers;
 
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
-import frc.robot.commands.arm_commands.freeMovePivot;
-import frc.robot.commands.claw_commands.clawSetSpeedTuner;
-import frc.robot.commands.claw_commands.closeClaw;
 import frc.robot.commands.claw_commands.intake;
-import frc.robot.commands.claw_commands.openClaw;
 import frc.robot.commands.claw_commands.outake;
+import frc.robot.commands.claw_commands.slowOutake;
 import frc.robot.commands.claw_commands.stopIntake;
-import frc.robot.commands.claw_commands.switchMode;
-import frc.robot.commands.default_commands.ArmDefaultCommand;
-import frc.robot.commands.spool_commands.extendSpool;
-import frc.robot.commands.spool_commands.moveSpoolTo;
-import frc.robot.commands.spool_commands.retractSpool;
-import frc.robot.commands.spool_commands.spoolMoveToTuner;
-import frc.robot.commands.turret_commands.freeMoveTurret;
-import frc.robot.commands.turret_commands.setTurretGoal;
-import frc.robot.commands.turret_commands.turretMoveToTuner;
-import frc.robot.subsystems.Arm;
+import frc.robot.commands.default_commands.ClawDefaultCommand;
 import frc.robot.subsystems.Claw;
-import frc.robot.subsystems.Spool;
-import frc.robot.subsystems.Turret;
 
 import static frc.robot.Constants.*;
 
@@ -35,18 +19,12 @@ public class OperatorController {
     private POVButton m_up, m_upr, m_r, m_dwr, m_dw, m_dwl, m_l, m_upl;
 
     // Used Subsystems //
-    private Arm m_arm;
-    private Spool m_spool;
-    private Turret m_turret;
     private Claw m_claw;
 
-    public OperatorController(Arm arm, Spool spool, Turret turret, Claw claw) {
+    public OperatorController(Claw claw) {
         
         // Used Subsystems Instances //
-        m_arm = arm;
-        m_turret = turret;
         m_claw = claw;
-        m_spool = spool;
 
         // Xbox Controllers
         m_operatorController = new XboxController(k_OERATOR_CONTROLLER);
@@ -72,7 +50,7 @@ public class OperatorController {
         m_upl = new POVButton(m_operatorController, 315);
 
         // Default Command
-        m_arm.setDefaultCommand(new ArmDefaultCommand(m_arm, m_spool, m_turret, m_claw, m_operatorController));
+        m_claw.setDefaultCommand(new ClawDefaultCommand(m_claw, m_operatorController));
 
         bindButtons();
 
@@ -80,24 +58,12 @@ public class OperatorController {
 
     public void bindButtons() {
 
-        /* Pivot */
-        m_rb.whileTrue(new freeMovePivot(m_arm, true)).onFalse(m_arm.setFinalPivotGoal());
-        m_lb.whileTrue(new freeMovePivot(m_arm, false)).onFalse(m_arm.setFinalPivotGoal());
-        
-        m_up.onTrue(m_turret.setTurretGoal(Units.degreesToRadians(0)));
-        m_l.onTrue(m_turret.setTurretGoal(Units.degreesToRadians(90)));
-        m_r.onTrue(m_turret.setTurretGoal(Units.degreesToRadians(-90)));
-        m_dw.onTrue(m_turret.setTurretGoal(Units.degreesToRadians(180)));
-        
-        m_sl.whileTrue(m_spool.retractCommand()).onFalse(m_spool.stopCommand());
-        m_st.whileTrue(m_spool.extendCommand()).onFalse(m_spool.stopCommand());
+        m_rb.whileTrue(new intake(m_claw)).onFalse(new stopIntake(m_claw));
+        m_lb.whileTrue(new outake(m_claw)).onFalse(new stopIntake(m_claw));
+        m_a.whileTrue(new slowOutake(m_claw)).onFalse(new stopIntake(m_claw));
 
-        /* Presets */
-        m_x.onTrue(m_spool.moveToCommand(Units.inchesToMeters(0)).andThen(m_arm.setPivotGoal(k_pivotHomeRad)));
-        m_b.onTrue(m_arm.setPivotGoal(k_pivotHorizontalRad).andThen(m_spool.moveToCommand(Units.inchesToMeters(10))));
-        m_y.onTrue(m_arm.setPivotGoal(k_pivotHighScoreRad).andThen(m_spool.moveToCommand(Units.inchesToMeters(20))));
-        m_a.onTrue(m_arm.setPivotGoal(k_pivotGroudIntake).andThen(m_spool.moveToCommand(Units.inchesToMeters(14.173))));
-        
+        m_x.onTrue(m_claw.switchModesCommand());
+
     }
 
 }

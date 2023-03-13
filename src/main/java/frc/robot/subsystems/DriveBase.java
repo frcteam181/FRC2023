@@ -13,6 +13,7 @@ import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.PowerDistribution;
@@ -22,6 +23,8 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import static frc.robot.Constants.*;
@@ -39,10 +42,16 @@ public class DriveBase extends SubsystemBase {
   private boolean m_isTuning;
   private ShuffleboardTab m_tab;
   private double[] m_leftResponse, m_rightResponse;
-  private double m_driveKp, m_driveKi, m_driveKd, m_driveFFKv, m_driveFFKa, m_angularFFKv, m_angularFFKa, m_leftSetpointVel, m_rightSetpointVel, m_driveOpenLoopRamp;
+  private double m_driveEffort, m_driveKp, m_driveKi, m_driveKd, m_driveFFKv, m_driveFFKa, m_angularFFKv, m_angularFFKa, m_leftSetpointVel, m_rightSetpointVel, m_driveOpenLoopRamp;
   private GenericEntry m_driveKpEntry, m_driveKiEntry, m_driveKdEntry, m_driveFFKvEntry, m_driveFFKaEntry, m_angularFFKvEntry, m_angularFFKaEntry, m_driveOpenLoopRampEntry;
   private RamseteController m_RAMController;
   private DifferentialDriveFeedforward m_diffDriveFF;
+
+  // Trapezoid Profile
+  private TrapezoidProfile.Constraints m_constraints;
+  private double m_period;
+  private TrapezoidProfile.State m_state, m_goal;
+  private boolean m_enabled;
 
   //#Simulation
   //#endregion
@@ -111,9 +120,15 @@ public class DriveBase extends SubsystemBase {
 
     m_RAMController = k_RAMController;
 
+    m_driveEffort = 0;//k_driveEffort;
+
+    TrapezoidProfileSubsystem(new TrapezoidProfile.Constraints(1.5, 1), 0, 0.02);
+
     /* Tuning */
     m_isTuning = isTuning;
     if(m_isTuning){tune();}
+
+    disable();
   }
 
   @Override
@@ -125,6 +140,12 @@ public class DriveBase extends SubsystemBase {
     m_diffDrive.feedWatchdog();
 
     if(m_isTuning){tuningPeriodic();}
+
+    var profile = new TrapezoidProfile(m_constraints, m_goal, m_state);
+    m_state = profile.calculate(m_period);
+    if (m_enabled) {
+        useState(m_state);
+    }
 
   }
 
@@ -168,6 +189,10 @@ public class DriveBase extends SubsystemBase {
 
   public double getPitch(){
     return m_pigeon.getPitch();
+  }
+
+  public double getPitchRad() {
+    return Units.degreesToRadians(getPitch());
   }
 
   public double getYaw() {
@@ -238,18 +263,6 @@ public class DriveBase extends SubsystemBase {
   public RamseteController getRAMController() {
     return m_RAMController;
   }
-
-  //#region Utilities
-  
-  public double deadband(double value) {
-    if (Math.abs(value) >= k_DriverDeadband) {
-      return value;
-    } else {
-      return 0;
-    }
-  }
-
-  //#endregion Utilities
 
   //#region Path Following
 
@@ -353,4 +366,74 @@ public class DriveBase extends SubsystemBase {
   }
 
   //#endregion Tuning
+
+
+  public void autoBalance() {
+
+    if(Math.abs(getPitch()) < 1) {
+
+      m_leftLeader.setVoltage(0);
+      m_rightLeader.setVoltage(0);
+
+    } else {
+
+      var driveEffort = calcDriveEffort();
+
+      m_leftLeader.setVoltage(driveEffort);
+      m_rightLeader.setVoltage(driveEffort);
+
+    }
+
+  }
+
+  public double calcDriveEffort() {
+    return (Math.sin(getPitchRad())); //* m_maxDriveEffort);
+  }
+
+  public void driveForward(double speed) {
+    m_leftLeader.set(speed);
+    m_rightLeader.set(speed);
+  }
+
+  // Trapezoid Profile
+
+  public void TrapezoidProfileSubsystem(TrapezoidProfile.Constraints constraints, double initialPosition, double period) {
+    m_constraints = constraints;
+    m_state = new TrapezoidProfile.State(initialPosition, 0);
+    setGoal(initialPosition);
+    m_period = period;
+}
+
+public void setGoal(TrapezoidProfile.State goal) {
+  m_goal = goal;
+}
+
+public Command setDriveGoal(double goal) {
+  return Commands.runOnce(() -> setGoal(goal), this);
+}
+
+public void setGoal(double goal) {
+  setGoal(new TrapezoidProfile.State(goal, 0));
+}
+
+protected void useState(TrapezoidProfile.State setpoint) {
+  System.out.println("using state");
+  m_leftSetpointVel = setpoint.position;
+  m_rightSetpointVel = setpoint.velocity;
+  m_leftPID.setReference(setpoint.velocity, CANSparkMax.ControlType.kVelocity, k_PIVOT_SLOT_ID);
+  m_rightPID.setReference(setpoint.velocity, CANSparkMax.ControlType.kVelocity, k_PIVOT_SLOT_ID);
+}
+
+public void enable() {
+  m_enabled = true;
+}
+
+public void disable() {
+  m_enabled = false;
+}
+
+public void updateState(double currentState) {
+  m_state = new TrapezoidProfile.State(currentState, 0);
+}
+
 }

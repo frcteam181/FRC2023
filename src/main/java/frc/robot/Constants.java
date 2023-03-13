@@ -42,14 +42,14 @@ public final class Constants {
     public static final double k_driveOpenLoopRamp = 0.85;
 
     // SysId variables for drivebase
-    public static final Gains k_DriveGains = new Gains(0.00078, 0, 0, 0, 0, -1, 1);
+    public static final Gains k_DriveGains = new Gains(0.5, 0, 0, 0, 0, -1, 1);
     public static final double k_driveFFKs = 0; // (Volts * Seconds) / Meter
     public static final double k_driveFFKv = 0;
     public static final double k_driveFFKa = 0; // (Volts * Seconds^2) / Meter
     public static final double k_angularFFKv = 0;
     public static final double k_angularFFKa = 0;
-    public static final double k_MaxSpeedMetersPerSecond = 1.0;
-    public static final double k_MaxAccelerationMetersPerSecondSquared = 0.5;
+    public static final double k_MaxSpeedMetersPerSecond = 1.5;
+    public static final double k_MaxAccelerationMetersPerSecondSquared = 0.8;
     public static final double k_refTrackWidthMeters = 0;
     //public static final LinearSystem<N2,N2,N2> k_refPlant = LinearSystemId.identifyDrivetrainSystem(k_driveFFKv, k_driveFFKa, k_angularFFKv, k_angularFFKa, k_refTrackWidthMeters);
 

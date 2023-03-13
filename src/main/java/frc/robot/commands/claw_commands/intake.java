@@ -17,7 +17,7 @@ public class intake extends CommandBase {
 
     @Override
     public void initialize() {
-        m_claw.setSpeedWithBeam(2);
+        m_claw.setSpeedWithBeam(1);
     }
     
 }

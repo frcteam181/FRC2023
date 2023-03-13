@@ -4,6 +4,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.ControlType;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -77,6 +78,12 @@ public class Claw extends SubsystemBase {
         m_isTuning = isTuning;
         if(m_isTuning) {tune();}
 
+        m_leftMotor.setSecondaryCurrentLimit(10);
+        m_rightMotor.setSecondaryCurrentLimit(10);
+
+        m_leftMotor.setIdleMode(IdleMode.kBrake);
+        m_rightMotor.setIdleMode(IdleMode.kBrake);
+
     }
 
     @Override
@@ -103,15 +110,15 @@ public class Claw extends SubsystemBase {
     }
 
     public void intakeOn() {
-        m_rightMotor.set(m_intakeSpeed);
+        m_leftMotor.set(m_intakeSpeed);
     }
 
     public void outake() {
-        m_rightMotor.set(m_intakeSpeed * (-1.0/2.0));
+        m_leftMotor.set(m_intakeSpeed * -0.5);
     }
 
     public void stopIntake() {
-        m_rightMotor.set(0);
+        m_leftMotor.set(0);
     }
 
     public double getSetpointVel() {
@@ -231,5 +238,18 @@ public class Claw extends SubsystemBase {
     public boolean hasPiece() {
         return !m_hasPiece.get();
     }
+
+    public void spitCube() {
+        m_leftMotor.set(-0.12);
+    }
+
+    public Command spitCubeCommand() {
+        return Commands.runOnce(() -> spitCube(), this);
+    }
+      
+    public Command stopIntakeCommand() {
+        return Commands.runOnce(() -> stopIntake(), this);
+    }
+      
     
 }

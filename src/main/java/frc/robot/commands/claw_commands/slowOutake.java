@@ -3,11 +3,11 @@ package frc.robot.commands.claw_commands;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.Claw;
 
-public class outake extends CommandBase {
+public class slowOutake extends CommandBase {
 
     private Claw m_claw;
 
-    public outake(Claw claw) {
+    public slowOutake(Claw claw) {
 
         m_claw = claw;
 
@@ -17,7 +17,7 @@ public class outake extends CommandBase {
 
     @Override
     public void initialize() {
-        m_claw.setSpeed(-2);
+        m_claw.setSpeed(-0.8);
     }
     
 }
