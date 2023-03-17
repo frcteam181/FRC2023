@@ -2,9 +2,10 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.sensors.WPI_Pigeon2;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.ControlType;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
-import com.revrobotics.CANSparkMax.ControlType;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.DifferentialDriveFeedforward;
@@ -42,8 +43,8 @@ public class DriveBase extends SubsystemBase {
   private boolean m_isTuning;
   private ShuffleboardTab m_tab;
   private double[] m_leftResponse, m_rightResponse;
-  private double m_driveEffort, m_driveKp, m_driveKi, m_driveKd, m_driveFFKv, m_driveFFKa, m_angularFFKv, m_angularFFKa, m_leftSetpointVel, m_rightSetpointVel, m_driveOpenLoopRamp;
-  private GenericEntry m_driveKpEntry, m_driveKiEntry, m_driveKdEntry, m_driveFFKvEntry, m_driveFFKaEntry, m_angularFFKvEntry, m_angularFFKaEntry, m_driveOpenLoopRampEntry;
+  private double m_driveFF, m_driveEffort, m_driveKp, m_driveKi, m_driveKd, m_driveFFKv, m_driveFFKa, m_angularFFKv, m_angularFFKa, m_leftSetpointVel, m_rightSetpointVel, m_driveOpenLoopRamp;
+  private GenericEntry m_driveKpEntry, m_driveKiEntry, m_driveKdEntry, m_driveFFKvEntry, m_driveFFKaEntry, m_angularFFKvEntry, m_angularFFKaEntry, m_driveOpenLoopRampEntry, m_driveFFEntry;
   private RamseteController m_RAMController;
   private DifferentialDriveFeedforward m_diffDriveFF;
 
@@ -57,6 +58,8 @@ public class DriveBase extends SubsystemBase {
   //#endregion
 
   public DriveBase(boolean isTuning) {
+
+    TrapezoidProfileSubsystem(new TrapezoidProfile.Constraints(1.5, 1), 0, 0.02);
 
     m_leftLeader = new CANSparkMax(k_LEFT_LEADER, MotorType.kBrushless);
     m_leftFollower = new CANSparkMax(k_LEFT_FOLLOWER, MotorType.kBrushless);
@@ -122,13 +125,12 @@ public class DriveBase extends SubsystemBase {
 
     m_driveEffort = 0;//k_driveEffort;
 
-    TrapezoidProfileSubsystem(new TrapezoidProfile.Constraints(1.5, 1), 0, 0.02);
+    disable();
+    enableBreakers();
 
     /* Tuning */
     m_isTuning = isTuning;
     if(m_isTuning){tune();}
-
-    disable();
   }
 
   @Override
@@ -144,13 +146,25 @@ public class DriveBase extends SubsystemBase {
     var profile = new TrapezoidProfile(m_constraints, m_goal, m_state);
     m_state = profile.calculate(m_period);
     if (m_enabled) {
+        //System.out.println("About to use state");
         useState(m_state);
     }
 
   }
 
+  public void enableBreakers() {
+    m_leftLeader.setIdleMode(IdleMode.kBrake);
+    m_leftFollower.setIdleMode(IdleMode.kBrake);
+    m_rightLeader.setIdleMode(IdleMode.kBrake);
+    m_rightFollower.setIdleMode(IdleMode.kBrake);
+  }
+
   public void teleopDrive(double speedValue, double rotationValue) {
-    m_diffDrive.arcadeDrive(speedValue, rotationValue * 0.6, true);
+    m_diffDrive.arcadeDrive(speedValue * 0.75, rotationValue * 0.62, true);
+  }
+
+  public void teleopTankDrive(double leftSpeed, double rightSpeed) {
+    m_diffDrive.tankDrive(-leftSpeed, -rightSpeed, true);
   }
 
   public Field2d getField() {
@@ -267,10 +281,11 @@ public class DriveBase extends SubsystemBase {
   //#region Path Following
 
   public void followPath(double leftSetpointSpeed, double rightSetpointSpeed) {
+    System.out.println("Follow Path Called");
     m_leftSetpointVel = leftSetpointSpeed;
     m_rightSetpointVel = rightSetpointSpeed;
-    m_leftPID.setReference(leftSetpointSpeed, ControlType.kVelocity, k_DRIVE_SLOT_ID);
-    m_rightPID.setReference(rightSetpointSpeed, ControlType.kVelocity, k_DRIVE_SLOT_ID);
+    m_leftPID.setReference(leftSetpointSpeed, CANSparkMax.ControlType.kVelocity, k_DRIVE_SLOT_ID);
+    m_rightPID.setReference(rightSetpointSpeed, CANSparkMax.ControlType.kVelocity, k_DRIVE_SLOT_ID);
   }
 
   public double getLeftCurrent() {
@@ -313,11 +328,14 @@ public class DriveBase extends SubsystemBase {
     m_driveKpEntry = m_tab.add("Drive Kp", m_driveKp).withPosition(0, 0).getEntry();
     m_driveKiEntry = m_tab.add("Drive Ki", m_driveKi).withPosition(0, 1).getEntry();
     m_driveKdEntry = m_tab.add("Drive Kd", m_driveKd).withPosition(0, 2).getEntry();
+    m_driveFFEntry = m_tab.add("Drive FF", m_driveFF).withPosition(0, 3).getEntry();
+
     m_tab.addNumber("Heading", this::getHeading).withPosition(4, 1);
     m_tab.addNumber("Left Pos (meters)", this::getLeftPosition).withPosition(1, 0);
     m_tab.addNumber("Right Pos (meters)", this::getRightPosition).withPosition(7, 0);
     m_tab.addNumber("Left Pos (in)", this::getLeftPositionIn).withPosition(2, 0);
     m_tab.addNumber("Right Pos (in)", this::getRightPositionIn).withPosition(6, 0);
+
     m_driveFFKvEntry = m_tab.add("Drive Kv", m_driveFFKv).withPosition(8, 0).getEntry();
     m_driveFFKaEntry = m_tab.add("Drive Ka", m_driveFFKa).withPosition(8, 1).getEntry();
     m_angularFFKvEntry = m_tab.add("Angular Kv", m_angularFFKv).withPosition(8, 2).getEntry();
@@ -335,11 +353,13 @@ public class DriveBase extends SubsystemBase {
     var driveKp = m_driveKpEntry.getDouble(k_DriveGains.kP);
     var driveKi = m_driveKiEntry.getDouble(k_DriveGains.kI);
     var driveKd = m_driveKdEntry.getDouble(k_DriveGains.kD);
+    var driveFF = m_driveFFEntry.getDouble(k_DriveGains.kFF);
 
     // Left PID
     if(driveKp != m_driveKp) {m_leftPID.setP(driveKp, k_DRIVE_SLOT_ID); m_rightPID.setP(driveKp, k_DRIVE_SLOT_ID); m_driveKp = driveKp;}
     if(driveKi != m_driveKi) {m_leftPID.setI(driveKi, k_DRIVE_SLOT_ID); m_rightPID.setI(driveKi, k_DRIVE_SLOT_ID); m_driveKi = driveKi;}
     if(driveKd != m_driveKd) {m_leftPID.setD(driveKd, k_DRIVE_SLOT_ID); m_rightPID.setD(driveKd, k_DRIVE_SLOT_ID); m_driveKd = driveKd;}
+    if(driveFF != m_driveFF) {m_leftPID.setFF(driveFF, k_DRIVE_SLOT_ID); m_rightPID.setFF(driveFF, k_DRIVE_SLOT_ID); m_driveFF = driveFF;}
 
     var driveOpenLoopRamp = m_driveOpenLoopRampEntry.getDouble(k_driveOpenLoopRamp);
     if(driveOpenLoopRamp != m_driveOpenLoopRamp) {m_leftLeader.setOpenLoopRampRate(driveOpenLoopRamp); m_rightLeader.setOpenLoopRampRate(driveOpenLoopRamp); m_driveOpenLoopRamp = driveOpenLoopRamp;}
@@ -405,10 +425,12 @@ public class DriveBase extends SubsystemBase {
 }
 
 public void setGoal(TrapezoidProfile.State goal) {
+  //System.out.println("Goal Updated");
   m_goal = goal;
 }
 
 public Command setDriveGoal(double goal) {
+  //System.out.println("Drive Goal Set");
   return Commands.runOnce(() -> setGoal(goal), this);
 }
 
@@ -417,8 +439,7 @@ public void setGoal(double goal) {
 }
 
 protected void useState(TrapezoidProfile.State setpoint) {
-  System.out.println("using state");
-  m_leftSetpointVel = setpoint.position;
+  m_leftSetpointVel = setpoint.velocity;
   m_rightSetpointVel = setpoint.velocity;
   m_leftPID.setReference(setpoint.velocity, CANSparkMax.ControlType.kVelocity, k_PIVOT_SLOT_ID);
   m_rightPID.setReference(setpoint.velocity, CANSparkMax.ControlType.kVelocity, k_PIVOT_SLOT_ID);

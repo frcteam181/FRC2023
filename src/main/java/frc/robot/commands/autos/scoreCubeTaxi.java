@@ -17,17 +17,14 @@ public class scoreCubeTaxi extends CommandBase {
 
     @Override
     public void initialize() {
-        System.out.println("Initialized");
         m_driveBase.resetEncoders();
         m_driveBase.resetHeading();
         m_driveBase.enable();
-        m_driveBase.setDriveGoal(20);
+        m_driveBase.setDriveGoal(-20);
     }
 
     @Override
     public void end(boolean interrupted) {
-        System.out.println("Ended");
-        m_driveBase.disable();
     }
     
 }

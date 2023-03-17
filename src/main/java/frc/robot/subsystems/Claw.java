@@ -46,8 +46,6 @@ public class Claw extends SubsystemBase {
 
         m_rightMotor.follow(m_leftMotor, true);
 
-        //m_leftMotor.setClosedLoopRampRate(0.2);
-
         m_encoder = m_leftMotor.getEncoder();
         m_encoder.setPositionConversionFactor(k_clawPosFacMeter);
         m_encoder.setVelocityConversionFactor(k_clawVelFacMeterPerSec);
@@ -78,8 +76,8 @@ public class Claw extends SubsystemBase {
         m_isTuning = isTuning;
         if(m_isTuning) {tune();}
 
-        m_leftMotor.setSecondaryCurrentLimit(10);
-        m_rightMotor.setSecondaryCurrentLimit(10);
+        // m_leftMotor.setSecondaryCurrentLimit(10);
+        // m_rightMotor.setSecondaryCurrentLimit(10);
 
         m_leftMotor.setIdleMode(IdleMode.kBrake);
         m_rightMotor.setIdleMode(IdleMode.kBrake);
@@ -96,7 +94,7 @@ public class Claw extends SubsystemBase {
     public void setSpeed(double setpointVel) {
         m_setpointVel = setpointVel;
         var clawFFEffort = m_clawMotorFF.calculate(setpointVel);
-        m_clawPID.setReference(setpointVel, ControlType.kVelocity, k_CLAW_SLOT_ID, clawFFEffort);
+        m_clawPID.setReference(setpointVel, CANSparkMax.ControlType.kVelocity, k_CLAW_SLOT_ID, clawFFEffort);
     }
 
     public void setSpeedWithBeam(double setpointVel) {
@@ -105,7 +103,7 @@ public class Claw extends SubsystemBase {
             stopIntake();
         } else {
             var clawFFEffort = m_clawMotorFF.calculate(setpointVel);
-            m_clawPID.setReference(setpointVel, ControlType.kVelocity, k_CLAW_SLOT_ID, clawFFEffort);
+            m_clawPID.setReference(setpointVel, CANSparkMax.ControlType.kVelocity, k_CLAW_SLOT_ID, clawFFEffort);
         }
     }
 
@@ -156,6 +154,7 @@ public class Claw extends SubsystemBase {
     }
 
     public Command switchModesCommand() {
+        System.out.println("Switch Command Called");
         return Commands.runOnce(() -> switchModes(), this);
     }
 

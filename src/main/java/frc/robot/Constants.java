@@ -61,13 +61,13 @@ public final class Constants {
     // Pivot
     public static final int k_PIVOT_SLOT_ID = 0;
     public static final double k_pivotKG_m_Gain = 0;
-    public static final double k_pivotKG_b_Gain = 0.5;
-    public static final double k_maxPivotVel = 1.2;
-    public static final double k_maxPivotAcc = 1;
+    public static final double k_pivotKG_b_Gain = 0.87;
+    public static final double k_maxPivotVel = 1.5;
+    public static final double k_maxPivotAcc = 1.1;
     public static final double k_pivotGearRatio = 1.0;
     public static final double k_pivotPosFacRad = Units.degreesToRadians(360/k_pivotGearRatio);
     public static final double k_pivotVelFacRadPerSec = k_pivotPosFacRad/60.0;
-    public static final Gains k_PivotGains = new Gains(0, 0, 0, 0, 0, -1, 1);
+    public static final Gains k_PivotGains = new Gains(1, 0, 0, 0, 0, -1, 1);
 
     // Spool
     public static final int k_SPOOL_SLOT_ID = 0;
@@ -75,7 +75,6 @@ public final class Constants {
     public static final double k_spoolDiameterMeter = Units.inchesToMeters(1);
     public static final double k_spoolPosFacMeter = (k_spoolDiameterMeter * Math.PI)/k_spoolGearRatio; //meter per rev
     public static final double k_spoolVelFacMeterPerSec = k_spoolPosFacMeter/60.0; // m/s
-    public static final double k_maxSpoolExtentionMeter = Units.inchesToMeters(30);
     public static final Gains k_SpoolGains = new Gains(15, 0, 0, 0, 0, -1, 1);
 
     // Claw
@@ -134,26 +133,28 @@ public final class Constants {
 
     /* Presets */ /*-----------------------------------------------------------------------------*/ /* Presets */
 
-    // Angle Presets
-    // public static final double k_addedAngleDeg = 71;
-    // public static final double k_addedAngleRad = Units.degreesToRadians(k_addedAngleDeg);
-    // public static final double k_pivotHomeRad = Units.degreesToRadians(-66 + k_addedAngleDeg);
-    // public static final double k_maxPivotAngleRad = Units.degreesToRadians(20 + k_addedAngleDeg);
-    // public static final double k_pivotHighScoreRad = Units.degreesToRadians(11 + k_addedAngleDeg);
-    // public static final double k_pivotHorizontalRad = Units.degreesToRadians(0 + k_addedAngleDeg);
-    // public static final double k_pivotSafetyAngleRad = Units.degreesToRadians(-45 + k_addedAngleDeg);
-    // public static final double k_pivotGroudIntake = Units.degreesToRadians(-45 + k_addedAngleDeg);
-
-    public static final double k_addedAngleDeg = 71;
-    public static final double k_addedAngleRad = Units.degreesToRadians(k_addedAngleDeg);
-    public static final double k_pivotHomeRad = Units.degreesToRadians(122);
-    public static final double k_maxPivotAngleRad = Units.degreesToRadians(210);
-    public static final double k_pivotHighScoreRad = Units.degreesToRadians(202);
-    public static final double k_pivotHorizontalRad = Units.degreesToRadians(188);
+    /* Pivot */
+    //Cube
+    public static final double k_pivotHomeRad = Units.degreesToRadians(130);
+    public static final double k_maxPivotAngleRad = Units.degreesToRadians(225);
+    public static final double k_pivotHighScoreRad = Units.degreesToRadians(215);
+    public static final double k_pivotMidScoreRad = Units.degreesToRadians(210);
+    public static final double k_pivotGroudIntakeRad = Units.degreesToRadians(160);
+    public static final double k_pivotHorizontalRad = Units.degreesToRadians(187);
     public static final double k_pivotSafetyAngleRad = Units.degreesToRadians(150);
-    public static final double k_pivotGroudIntake = Units.degreesToRadians(140);
-    public static final double k_pivotOffsetRad = Units.degreesToRadians(122); // Offs0et to ZERO 0 deg a.k.a. parallel to floor //66
-    //public static final double k_pivotThroughboreOffsetRad = Units.degreesToRadians(122 + 66);
+    public static final double k_pivotSubstationRad = Units.degreesToRadians(205);
+    //Cone
+
+    /* Spool */
+    //Cube
+    public static final double k_spoolHomeMeter = Units.inchesToMeters(0);
+    public static final double k_maxSpoolExtentionMeter = Units.inchesToMeters(35);
+    public static final double k_spoolHighScoreMeter = Units.inchesToMeters(30);
+    public static final double k_spoolMidScoreMeter = Units.inchesToMeters(15);
+    public static final double k_spoolLowScoreMeter = Units.inchesToMeters(0);
+    public static final double k_spoolGroundPickupMeters = Units.inchesToMeters(7);
+    public static final double k_spoolSubstationMeters = Units.inchesToMeters(0);
+    //Cone
 
     // Do not change anything after this line unless you rewire the robot and
     // update the spreadsheet!
@@ -178,10 +179,9 @@ public final class Constants {
 
     /* Digital Input Output IDs */
 
-    public static final int k_PIVOT_HOME_BEAM_ID = 0;
-    public static final int k_PIVOT_ZERO_BEAM_ID = 1;
-    public static final int k_SPOOL_HOME_BEAM_ID = 2;
-    public static final int k_SPOOL_MAX_BEAM_ID = 3;
+    public static final int k_HAS_PIECE_BEAM_ID = 0;
+    public static final int k_SPOOL_HOME_BEAM_ID = 1;
+    public static final int k_SPOOL_MAX_BEAM_ID = 2;
 
     /* Pneumatics Ports */
 
