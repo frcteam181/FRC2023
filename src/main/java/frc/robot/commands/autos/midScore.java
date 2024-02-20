@@ -21,16 +21,12 @@ public class midScore extends SequentialCommandGroup {
         m_spool = spool;
         m_claw = claw;
 
-        System.out.println("Mid Score Auto Started");
-
         addCommands(
-            new SequentialCommandGroup(
-                new freeMovePivot(m_arm, true),//.withTimeout(0.001),
-                m_arm.setPivotGoal(k_pivotMidScoreRad),
-                m_spool.moveToCommand(k_spoolMidScoreMeter),
-                new WaitCommand(k_spoolMidScoreMeter),
-                m_claw.switchModesCommand()
-            )
+            new freeMovePivot(m_arm, true).raceWith(new WaitCommand(0.001)),
+            m_arm.setPivotGoal(k_pivotMidScoreRad).raceWith(new WaitCommand(2)),
+            m_spool.moveToCommand(k_spoolMidScoreMeter).raceWith(new WaitCommand(2)),
+          //  new WaitCommand(2),
+            m_claw.switchModesCommand()
         );
 
         addRequirements(m_arm, m_spool, m_claw);

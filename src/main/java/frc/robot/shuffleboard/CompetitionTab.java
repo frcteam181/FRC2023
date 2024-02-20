@@ -11,6 +11,7 @@ import com.pathplanner.lib.auto.RamseteAutoBuilder;
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -18,7 +19,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.commands.autos.doNothing;
 import frc.robot.commands.autos.midScore;
+import frc.robot.commands.autos.mobility;
 import frc.robot.commands.autos.scoreCubeTaxi;
+import frc.robot.commands.presets.midScorePreset;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Claw;
 import frc.robot.subsystems.DriveBase;
@@ -76,9 +79,13 @@ public class CompetitionTab {
             m_autoChooser = new SendableChooser<Command>();
 
             m_autoChooser.setDefaultOption("Do Nothing", new doNothing(m_driveBase));
-            m_autoChooser.addOption("Do Nothing", new doNothing(m_driveBase));        
+            m_autoChooser.addOption("Do Nothing", new doNothing(m_driveBase));
             m_autoChooser.addOption("Cube and Taxi", new scoreCubeTaxi(m_driveBase));
             m_autoChooser.addOption("Mid Cone", new midScore(m_arm, m_spool, m_claw));
+            m_autoChooser.addOption("Taxi", new mobility(m_driveBase, Units.inchesToMeters(144)));
+            m_autoChooser.addOption("Taxi Reversed", new mobility(m_driveBase, Units.inchesToMeters(-144)));
+            m_autoChooser.addOption("Balance", new mobility(m_driveBase, Units.inchesToMeters(84)));
+            m_autoChooser.addOption("Balance Reversed", new mobility(m_driveBase, Units.inchesToMeters(-84)));
 
         }
 

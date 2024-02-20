@@ -49,7 +49,7 @@ public class RobotContainer {
     m_isPlannedAuto = false;
 
     //Subsystems
-    m_driveBase = new DriveBase(false);
+    m_driveBase = new DriveBase(false, false);
     m_arm = new Arm(false);
     m_spool = new Spool(false);
     m_claw = new Claw(false);

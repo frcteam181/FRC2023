@@ -2,7 +2,6 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.sensors.WPI_Pigeon2;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.ControlType;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -40,7 +39,7 @@ public class DriveBase extends SubsystemBase {
   private Field2d m_field;
   private PowerDistribution m_pdh;
   private WPI_Pigeon2 m_pigeon;
-  private boolean m_isTuning;
+  private boolean m_isTuning, m_isDebuging;
   private ShuffleboardTab m_tab;
   private double[] m_leftResponse, m_rightResponse;
   private double m_driveFF, m_driveEffort, m_driveKp, m_driveKi, m_driveKd, m_driveFFKv, m_driveFFKa, m_angularFFKv, m_angularFFKa, m_leftSetpointVel, m_rightSetpointVel, m_driveOpenLoopRamp;
@@ -52,12 +51,12 @@ public class DriveBase extends SubsystemBase {
   private TrapezoidProfile.Constraints m_constraints;
   private double m_period;
   private TrapezoidProfile.State m_state, m_goal;
-  private boolean m_enabled;
+  private boolean m_enabled, m_isFinished;
 
   //#Simulation
   //#endregion
 
-  public DriveBase(boolean isTuning) {
+  public DriveBase(boolean isTuning, boolean isDebuging) {
 
     TrapezoidProfileSubsystem(new TrapezoidProfile.Constraints(1.5, 1), 0, 0.02);
 
@@ -123,7 +122,7 @@ public class DriveBase extends SubsystemBase {
 
     m_RAMController = k_RAMController;
 
-    m_driveEffort = 0;//k_driveEffort;
+    m_driveEffort = 0;
 
     disable();
     enableBreakers();
@@ -145,11 +144,12 @@ public class DriveBase extends SubsystemBase {
 
     var profile = new TrapezoidProfile(m_constraints, m_goal, m_state);
     m_state = profile.calculate(m_period);
+    if(profile.timeLeftUntil(m_goal.position) <= 0) {
+      m_isFinished = true;
+    }
     if (m_enabled) {
-        //System.out.println("About to use state");
         useState(m_state);
     }
-
   }
 
   public void enableBreakers() {
@@ -160,7 +160,7 @@ public class DriveBase extends SubsystemBase {
   }
 
   public void teleopDrive(double speedValue, double rotationValue) {
-    m_diffDrive.arcadeDrive(speedValue * 0.75, rotationValue * 0.62, true);
+    m_diffDrive.arcadeDrive(speedValue * 0.6 /*0.6*/, rotationValue * 0.65, true);
   }
 
   public void teleopTankDrive(double leftSpeed, double rightSpeed) {
@@ -234,6 +234,10 @@ public class DriveBase extends SubsystemBase {
     return m_rightEncoder.getPosition();
   }
 
+  public double getAverageWheelPosition() {
+    return (getLeftPosition() + getRightPosition()) * 0.5;
+  }
+
   public double getLeftPositionIn() {
     return Units.metersToInches(m_leftEncoder.getPosition());
   }
@@ -278,10 +282,13 @@ public class DriveBase extends SubsystemBase {
     return m_RAMController;
   }
 
+  public boolean isTPEnabled() {
+    return m_enabled;
+  }
+
   //#region Path Following
 
   public void followPath(double leftSetpointSpeed, double rightSetpointSpeed) {
-    System.out.println("Follow Path Called");
     m_leftSetpointVel = leftSetpointSpeed;
     m_rightSetpointVel = rightSetpointSpeed;
     m_leftPID.setReference(leftSetpointSpeed, CANSparkMax.ControlType.kVelocity, k_DRIVE_SLOT_ID);
@@ -294,6 +301,10 @@ public class DriveBase extends SubsystemBase {
 
   public double getRightCurrent() {
     return m_pdh.getCurrent(2);
+  }
+
+  public boolean isAtSetpoint() {
+    return m_isFinished;
   }
 
   //#endregion Path Following
@@ -321,10 +332,6 @@ public class DriveBase extends SubsystemBase {
     m_leftResponse = new double[2];
     m_rightResponse = new double[2];
 
-    // Intake Current
-    //Shuffleboard.getTab("Claw Tuning").addNumber("Left Current", this::getLeftCurrent).withPosition(4, 1);
-    //Shuffleboard.getTab("Claw Tuning").addNumber("Right Current", this::getRightCurrent).withPosition(5, 1);
-
     m_driveKpEntry = m_tab.add("Drive Kp", m_driveKp).withPosition(0, 0).getEntry();
     m_driveKiEntry = m_tab.add("Drive Ki", m_driveKi).withPosition(0, 1).getEntry();
     m_driveKdEntry = m_tab.add("Drive Kd", m_driveKd).withPosition(0, 2).getEntry();
@@ -335,6 +342,7 @@ public class DriveBase extends SubsystemBase {
     m_tab.addNumber("Right Pos (meters)", this::getRightPosition).withPosition(7, 0);
     m_tab.addNumber("Left Pos (in)", this::getLeftPositionIn).withPosition(2, 0);
     m_tab.addNumber("Right Pos (in)", this::getRightPositionIn).withPosition(6, 0);
+    m_tab.addBoolean("Drive Trapezoid Profile", this::isTPEnabled).withPosition(4, 3);
 
     m_driveFFKvEntry = m_tab.add("Drive Kv", m_driveFFKv).withPosition(8, 0).getEntry();
     m_driveFFKaEntry = m_tab.add("Drive Ka", m_driveFFKa).withPosition(8, 1).getEntry();
@@ -378,7 +386,6 @@ public class DriveBase extends SubsystemBase {
       m_angularFFKv = angularFFKv;
       m_angularFFKa = angularFFKa;
     }
-
   }
 
   public boolean isTuning() {
@@ -410,7 +417,7 @@ public class DriveBase extends SubsystemBase {
     return (Math.sin(getPitchRad())); //* m_maxDriveEffort);
   }
 
-  public void driveForward(double speed) {
+  public void driveSpeed(double speed) {
     m_leftLeader.set(speed);
     m_rightLeader.set(speed);
   }
@@ -430,7 +437,6 @@ public void setGoal(TrapezoidProfile.State goal) {
 }
 
 public Command setDriveGoal(double goal) {
-  //System.out.println("Drive Goal Set");
   return Commands.runOnce(() -> setGoal(goal), this);
 }
 
